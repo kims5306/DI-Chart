@@ -15,7 +15,7 @@
 
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         min-height: 100vh;
         color: #333;
         line-height: 1.6;
@@ -25,6 +25,10 @@
         max-width: 1400px;
         margin: 0 auto;
         padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       }
 
       .header {
@@ -315,20 +319,20 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>
-          <img
-            src="CI.png"
-            alt="DI"
-            style="
-              height: 60px;
-              width: 60px;
-              margin-right: 10px;
-              vertical-align: middle;
-            "
-          />
-          DI 동일 (001530)
-        </h1>
-        <p>실시간 주식 데이터 시각화 대시보드</p>
+         <h1>
+           <img
+             src="CI.png"
+             alt="DI"
+             style="
+               height: 45px;
+               width: 45px;
+               margin-right: 15px;
+               vertical-align: middle;
+             "
+           />
+           DI 동일 (001530)
+         </h1>
+        <p style="font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-weight: 300; letter-spacing: 0.5px;">실시간 주식 데이터 시각화 대시보드</p>
         <div class="badge">
           ✨ 가격 및 지표 + 거래량 + MACD + RCI + 외국인보유율
         </div>
@@ -397,8 +401,8 @@
             <div class="analysis-loading" id="analysisLoading">
               <div class="spinner"></div>
               <p>📊 차트 데이터 분석 중...</p>
-              <p>📰 네이버 금융에서 DI동일 뉴스 수집 중...</p>
-              <p>🔤 키워드 추출 및 워드클라우드 생성 중...</p>
+              <p>🔤 DI동일 핵심 키워드 분석 중...</p>
+              <p>📈 기술적 지표 종합 평가 중...</p>
               <p>🤖 AI 종합 분석 리포트 생성 중...</p>
             </div>
             <div class="analysis-content" id="analysisContent" style="display: none">
@@ -2539,15 +2543,14 @@
           // 1. 기술적 분석 수행
           const technicalAnalysis = performTechnicalAnalysis();
           
-          // 2. 네이버 금융 뉴스 데이터 (실제로는 네이버 금융 API 호출)
+          // 2. 키워드 분석 준비
           await new Promise(resolve => setTimeout(resolve, 2000)); // 로딩 시뮬레이션
-          const newsData = await getNaverFinanceNews();
           
-          // 3. 종합 분석 생성
-          const aiAnalysis = generateAIAnalysis(technicalAnalysis, newsData);
+          // 3. 종합 분석 생성 (뉴스 데이터 없이)
+          const aiAnalysis = generateAIAnalysis(technicalAnalysis);
           
           // 4. 결과 표시
-          displayAnalysisResults(technicalAnalysis, newsData, aiAnalysis);
+          displayAnalysisResults(technicalAnalysis, aiAnalysis);
           
           loadingEl.style.display = "none";
           contentEl.style.display = "block";
@@ -2670,7 +2673,7 @@
         ];
       }
 
-      function generateAIAnalysis(technical, news) {
+      function generateAIAnalysis(technical) {
         let overallSignal = "보합";
         let confidence = 0;
         
@@ -2689,14 +2692,7 @@
         
         if (parseFloat(technical.volumeRatio) > 1.5) techScore += 1;
         
-        // 뉴스 감정 점수
-        const newsScore = news.reduce((score, item) => {
-          if (item.sentiment === "positive") return score + 1;
-          if (item.sentiment === "negative") return score - 1;
-          return score;
-        }, 0);
-        
-        const totalScore = techScore + newsScore;
+        const totalScore = techScore;
         
         if (totalScore >= 3) {
           overallSignal = "매수";
@@ -2716,7 +2712,7 @@
         }
         
         // GPT 스타일 종합 서술 생성
-        const aiCommentary = generateAICommentary(technical, news, overallSignal, confidence);
+        const aiCommentary = generateAICommentary(technical, overallSignal, confidence);
 
         return {
           signal: overallSignal,
@@ -2728,16 +2724,7 @@
         };
       }
 
-      function generateAICommentary(technical, news, signal, confidence) {
-        // 뉴스 분석
-        const batteryNews = news.filter(item => 
-          item.title.includes('2차전지') || item.title.includes('알루미늄박') || item.title.includes('배터리')
-        );
-        const textileNews = news.filter(item => 
-          item.title.includes('섬유') || item.title.includes('폴리에스터') || item.title.includes('직물')
-        );
-        const positiveNews = news.filter(item => item.sentiment === 'positive');
-        const negativeNews = news.filter(item => item.sentiment === 'negative');
+      function generateAICommentary(technical, signal, confidence) {
 
         // 기술적 상황 분석
         const trendAnalysis = technical.trend === "강한상승" ? "강력한 상승 모멘텀" :
@@ -2751,16 +2738,8 @@
         
         // 1. 사업 현황 분석
         commentary += `**🏭 사업 현황:** DI동일은 1955년 설립된 섬유 전문 기업으로, 최근 2차전지용 알루미늄박 사업을 신성장동력으로 육성하고 있습니다. `;
-        
-        if (batteryNews.length > 0) {
-          commentary += `특히 전기차 시장 급성장과 함께 2차전지 소재 수요가 크게 증가하면서 알루미늄박 부문의 수주 확대가 주가에 긍정적 영향을 미치고 있습니다. `;
-        }
-        
-        if (textileNews.length > 0) {
-          commentary += `기존 주력 사업인 섬유 부문에서도 친환경 소재 개발을 통해 지속가능한 성장 모멘텀을 확보하고 있어 사업 포트폴리오의 균형이 개선되고 있습니다.\n\n`;
-        } else {
-          commentary += `\n\n`;
-        }
+        commentary += `전기차 시장 급성장과 함께 2차전지 소재 수요가 크게 증가하면서 알루미늄박 부문의 성장이 주목받고 있으며, `;
+        commentary += `동시에 소액주주 및 경영권 관련 이슈가 시장의 관심을 받고 있어 주가 변동성이 확대되고 있습니다.\n\n`;
 
         // 2. 기술적 분석
         commentary += `**📊 기술적 분석:** 현재 주가는 ${technical.currentPrice.toLocaleString()}원으로 ${trendAnalysis}을 보이고 있습니다. `;
@@ -2778,19 +2757,10 @@
           commentary += `거래량은 평균 수준을 유지하고 있습니다.\n\n`;
         }
 
-        // 3. 뉴스 및 펀더멘털 분석
-        commentary += `**📰 뉴스 분석:** `;
-        if (positiveNews.length > negativeNews.length) {
-          commentary += `최근 긍정적 뉴스가 우세한 가운데, `;
-          if (batteryNews.length > 0) {
-            commentary += `2차전지용 알루미늄박 수주 확대와 R&D 투자 확대 소식이 시장에서 호평받고 있습니다. `;
-          }
-          commentary += `회사의 신성장동력 발굴과 기술력 강화 노력이 중장기 성장성에 대한 기대감을 높이고 있습니다. `;
-        } else if (negativeNews.length > 0) {
-          commentary += `원자재 가격 상승 등 일부 우려 요인이 있으나, `;
-          commentary += `회사의 사업 다각화와 고부가가치 제품 비중 확대로 영향을 최소화할 것으로 예상됩니다. `;
-        }
-        commentary += `\n\n`;
+        // 3. 시장 이슈 분석
+        commentary += `**📰 시장 이슈:** 최근 소액주주 권익 보호 및 경영권 관련 이슈가 부각되면서 주주총회와 합병 관련 논의가 활발해지고 있습니다. `;
+        commentary += `이러한 거버넌스 이슈는 단기적으로 주가 변동성을 확대시킬 수 있으나, 중장기적으로는 기업 가치 제고에 긍정적 영향을 미칠 것으로 전망됩니다. `;
+        commentary += `또한 2차전지 시장의 지속적 성장과 함께 알루미늄박 사업의 성장 잠재력이 주목받고 있습니다.\n\n`;
 
         // 4. 투자 의견
         commentary += `**🎯 투자 의견:** `;
@@ -2828,35 +2798,50 @@
         }
       }
 
-      function generateWordCloud(news) {
-        // 뉴스에서 키워드 추출 및 빈도 계산
-        const allKeywords = news.flatMap(item => item.keywords || []);
-        const keywordFreq = {};
-        
-        // 추가 키워드 추출 (제목에서) - 섬유 및 2차전지 사업 중심
-        const additionalKeywords = [];
-        news.forEach(item => {
-          const title = item.title;
-          const summary = item.summary;
-          const text = title + ' ' + summary;
+      function generateWordCloud() {
+        // DI동일 관련 최신 핵심 키워드 (소액주주, 합병 이슈 반영)
+        const keywordFreq = {
+          // 최신 핫이슈 (높은 빈도)
+          '소액주주': 8,
+          '합병': 7,
+          '경영권': 6,
+          '주주총회': 5,
           
-          if (text.includes('2차전지') || text.includes('배터리')) additionalKeywords.push('2차전지');
-          if (text.includes('알루미늄박')) additionalKeywords.push('알루미늄박');
-          if (text.includes('전기차')) additionalKeywords.push('전기차');
-          if (text.includes('섬유') || text.includes('직물')) additionalKeywords.push('섬유');
-          if (text.includes('폴리에스터')) additionalKeywords.push('폴리에스터');
-          if (text.includes('친환경') || text.includes('지속가능')) additionalKeywords.push('친환경');
-          if (text.includes('실적') || text.includes('매출')) additionalKeywords.push('실적');
-          if (text.includes('R&D') || text.includes('연구개발')) additionalKeywords.push('R&D');
-          if (text.includes('수주') || text.includes('주문')) additionalKeywords.push('수주');
-          if (text.includes('원자재') || text.includes('원료')) additionalKeywords.push('원자재');
-          if (text.includes('차세대') || text.includes('전고체')) additionalKeywords.push('차세대기술');
-          if (text.includes('리튬이온')) additionalKeywords.push('리튬이온');
-        });
-        
-        [...allKeywords, ...additionalKeywords].forEach(keyword => {
-          keywordFreq[keyword] = (keywordFreq[keyword] || 0) + 1;
-        });
+          // 2차전지 사업 (중간 빈도)
+          '2차전지': 9,
+          '알루미늄박': 8,
+          '전기차': 7,
+          '배터리소재': 6,
+          'LG에너지솔루션': 5,
+          'SK온': 4,
+          
+          // 섬유 사업 (기본 빈도)
+          '섬유': 6,
+          '폴리에스터': 5,
+          '직물': 4,
+          '원사': 3,
+          
+          // 투자 관련
+          '실적': 7,
+          '매출': 6,
+          '영업이익': 5,
+          'R&D': 4,
+          '투자': 5,
+          '수주': 4,
+          
+          // 시장 이슈
+          '원자재가격': 4,
+          '환율': 3,
+          '친환경': 4,
+          '지속가능': 3,
+          
+          // 기타 키워드
+          '차세대기술': 3,
+          '리튬이온': 3,
+          '전고체배터리': 2,
+          '글로벌': 3,
+          '수출': 2
+        };
         
         // 빈도순 정렬
         const sortedKeywords = Object.entries(keywordFreq)
@@ -2899,7 +2884,7 @@
         }).join('');
       }
 
-      function displayAnalysisResults(technical, news, ai) {
+      function displayAnalysisResults(technical, ai) {
         const contentEl = document.getElementById("analysisContent");
         
         const signalClass = ai.signal.includes("매수") ? "signal-buy" : 
@@ -2941,29 +2926,16 @@
           </div>
 
           <div class="analysis-section">
-            <h3>📰 네이버 금융 뉴스 분석 <small style="color: #666;">(Naver Finance 기반)</small></h3>
-            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
-              <h4 style="margin: 0 0 10px 0; color: #2c3e50;">🔤 주요 키워드 워드클라우드</h4>
-              <div class="wordcloud-container" style="text-align: center; padding: 20px;">
-                ${generateWordCloud(news)}
+            <h3>🔤 DI동일 핵심 키워드 분석</h3>
+            <div style="margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #3498db;">
+              <h4 style="margin: 0 0 15px 0; color: #2c3e50;">주요 키워드 워드클라우드</h4>
+              <div class="wordcloud-container" style="text-align: center; padding: 25px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                ${generateWordCloud()}
               </div>
-              <p style="margin: 10px 0 0 0; font-size: 0.85em; color: #666;">
-                * 뉴스 제목과 내용에서 추출된 주요 키워드를 크기별로 표시
+              <p style="margin: 15px 0 0 0; font-size: 0.9em; color: #666; text-align: center;">
+                * DI동일 관련 최신 이슈 및 투자 키워드를 크기별로 표시
               </p>
             </div>
-            ${news.map(item => `
-              <div class="news-item">
-                <div class="news-title">
-                  <a href="${item.url}" target="_blank">
-                    ${item.title} 🔗
-                  </a>
-                </div>
-                <div class="news-summary">${item.summary}</div>
-                <div class="news-date">
-                  ${item.date} | 출처: <strong>${item.source}</strong>
-                </div>
-              </div>
-            `).join('')}
           </div>
 
           <div class="analysis-section">
