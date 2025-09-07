@@ -190,8 +190,12 @@
       }
 
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
 
       .analysis-content {
@@ -199,8 +203,14 @@
       }
 
       @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .analysis-section {
@@ -235,9 +245,21 @@
         margin: 5px;
       }
 
-      .signal-buy { background: #e8f5e8; color: #27ae60; border: 2px solid #27ae60; }
-      .signal-sell { background: #fdf2f2; color: #e74c3c; border: 2px solid #e74c3c; }
-      .signal-hold { background: #fff3cd; color: #856404; border: 2px solid #ffc107; }
+      .signal-buy {
+        background: #e8f5e8;
+        color: #27ae60;
+        border: 2px solid #27ae60;
+      }
+      .signal-sell {
+        background: #fdf2f2;
+        color: #e74c3c;
+        border: 2px solid #e74c3c;
+      }
+      .signal-hold {
+        background: #fff3cd;
+        color: #856404;
+        border: 2px solid #ffc107;
+      }
 
       .news-item {
         background: white;
@@ -319,20 +341,36 @@
   <body>
     <div class="container">
       <div class="header">
-         <h1>
-           <img
-             src="CI.png"
-             alt="DI"
-             style="
-               height: 45px;
-               width: 45px;
-               margin-right: 15px;
-               vertical-align: middle;
-             "
-           />
-           DI 동일 (001530)
-         </h1>
-        <p style="font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-weight: 300; letter-spacing: 0.5px;">실시간 주식 데이터 시각화 대시보드</p>
+        <h1>
+          <img
+            src="CI.png"
+            alt="DI"
+            style="
+              height: 85px;
+              width: 105px;
+              margin-right: 35px;
+              vertical-align: middle;
+            "
+          />
+          <p
+            style="
+              font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+              font-weight: 700;
+              letter-spacing: 0.5px;
+            "
+          >
+            DI 동일 (001530)
+          </p>
+        </h1>
+        <p
+          style="
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+          "
+        >
+          실시간 주식 데이터 시각화 대시보드
+        </p>
         <div class="badge">
           ✨ 가격 및 지표 + 거래량 + MACD + RCI + 외국인보유율
         </div>
@@ -353,7 +391,16 @@
           🌍 외국인 보유율
         </button>
         <button class="btn" onclick="showChart('all')">📋 전체 보기</button>
-        <button class="btn ai-analysis-btn" onclick="showAIAnalysis()" style="background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); margin-left: 10px;">🤖 AI 주가 분석</button>
+        <button
+          class="btn ai-analysis-btn"
+          onclick="showAIAnalysis()"
+          style="
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            margin-left: 10px;
+          "
+        >
+          🤖 AI 주가 분석
+        </button>
       </div>
 
       <div class="chart-container">
@@ -405,7 +452,11 @@
               <p>📈 기술적 지표 종합 평가 중...</p>
               <p>🤖 AI 종합 분석 리포트 생성 중...</p>
             </div>
-            <div class="analysis-content" id="analysisContent" style="display: none">
+            <div
+              class="analysis-content"
+              id="analysisContent"
+              style="display: none"
+            >
               <!-- 분석 결과가 여기에 동적으로 생성됩니다 -->
             </div>
           </div>
@@ -2515,19 +2566,21 @@
       // AI 분석 함수들
       function showAIAnalysis() {
         console.log("🤖 AI 분석 시작");
-        
+
         // 모든 차트 숨기기
         document.querySelectorAll(".chart-section").forEach((section) => {
           section.style.display = "none";
         });
-        
+
         // AI 분석 섹션 보이기
         document.getElementById("aiAnalysisSection").style.display = "block";
-        
+
         // 버튼 상태 업데이트
-        document.querySelectorAll(".btn").forEach((btn) => btn.classList.remove("active"));
+        document
+          .querySelectorAll(".btn")
+          .forEach((btn) => btn.classList.remove("active"));
         document.querySelector(".ai-analysis-btn").classList.add("active");
-        
+
         // 분석 실행
         performAIAnalysis();
       }
@@ -2535,26 +2588,25 @@
       async function performAIAnalysis() {
         const loadingEl = document.getElementById("analysisLoading");
         const contentEl = document.getElementById("analysisContent");
-        
+
         loadingEl.style.display = "block";
         contentEl.style.display = "none";
-        
+
         try {
           // 1. 기술적 분석 수행
           const technicalAnalysis = performTechnicalAnalysis();
-          
+
           // 2. 키워드 분석 준비
-          await new Promise(resolve => setTimeout(resolve, 2000)); // 로딩 시뮬레이션
-          
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // 로딩 시뮬레이션
+
           // 3. 종합 분석 생성 (뉴스 데이터 없이)
           const aiAnalysis = generateAIAnalysis(technicalAnalysis);
-          
+
           // 4. 결과 표시
           displayAnalysisResults(technicalAnalysis, aiAnalysis);
-          
+
           loadingEl.style.display = "none";
           contentEl.style.display = "block";
-          
         } catch (error) {
           console.error("분석 중 오류:", error);
           contentEl.innerHTML = `
@@ -2572,32 +2624,39 @@
         const latestData = stockData[stockData.length - 1];
         const prevData = stockData[stockData.length - 2];
         const weekAgoData = stockData[Math.max(0, stockData.length - 5)];
-        
+
         // 현재 가격과 이동평균 비교
         const currentPrice = latestData.closePrice;
         const ma5 = calculateSimpleMA(5);
         const ma20 = calculateSimpleMA(20);
         const ma60 = calculateSimpleMA(60);
-        
+
         // MACD 신호
         const macdData = calculateMACD(stockData);
         const latestMACD = macdData.macd[macdData.macd.length - 1];
         const latestSignal = macdData.signal[macdData.signal.length - 1];
-        const latestHistogram = macdData.histogram[macdData.histogram.length - 1];
-        
+        const latestHistogram =
+          macdData.histogram[macdData.histogram.length - 1];
+
         // RCI 신호
         const rciData = calculateRCI(stockData);
         const latestRCI9 = rciData.rci9[rciData.rci9.length - 1];
         const latestRCI26 = rciData.rci26[rciData.rci26.length - 1];
-        
+
         // 거래량 분석
-        const avgVolume = stockData.slice(-10).reduce((sum, d) => sum + d.accumulatedTradingVolume, 0) / 10;
+        const avgVolume =
+          stockData
+            .slice(-10)
+            .reduce((sum, d) => sum + d.accumulatedTradingVolume, 0) / 10;
         const currentVolume = latestData.accumulatedTradingVolume;
-        
+
         // 가격 변동률
-        const priceChangePercent = ((currentPrice - prevData.closePrice) / prevData.closePrice) * 100;
-        const weekChangePercent = ((currentPrice - weekAgoData.closePrice) / weekAgoData.closePrice) * 100;
-        
+        const priceChangePercent =
+          ((currentPrice - prevData.closePrice) / prevData.closePrice) * 100;
+        const weekChangePercent =
+          ((currentPrice - weekAgoData.closePrice) / weekAgoData.closePrice) *
+          100;
+
         return {
           currentPrice,
           priceChangePercent,
@@ -2610,14 +2669,21 @@
           rci9: latestRCI9?.y?.toFixed(1) || "N/A",
           rci26: latestRCI26?.y?.toFixed(1) || "N/A",
           volumeRatio: (currentVolume / avgVolume).toFixed(2),
-          trend: currentPrice > ma20 ? (currentPrice > ma60 ? "강한상승" : "상승") : (currentPrice < ma60 ? "강한하락" : "하락"),
+          trend:
+            currentPrice > ma20
+              ? currentPrice > ma60
+                ? "강한상승"
+                : "상승"
+              : currentPrice < ma60
+              ? "강한하락"
+              : "하락",
           support: Math.min(ma20, ma60).toFixed(0),
-          resistance: Math.max(ma20, ma60).toFixed(0)
+          resistance: Math.max(ma20, ma60).toFixed(0),
         };
       }
 
       function calculateSimpleMA(period) {
-        const prices = stockData.slice(-period).map(d => d.closePrice);
+        const prices = stockData.slice(-period).map((d) => d.closePrice);
         return prices.reduce((sum, price) => sum + price, 0) / prices.length;
       }
 
@@ -2626,74 +2692,92 @@
         // 실제 섬유 및 2차전지 알루미늄박 사업 관련 뉴스
         return [
           {
-            title: "DI동일, 2차전지용 알루미늄박 수주 확대...전기차 수요 급증 수혜",
-            summary: "DI동일이 2차전지용 알루미늄박 생산 능력을 확대하며 국내외 전기차 배터리 업체들로부터 대규모 수주를 확보했습니다. 전기차 시장 성장과 함께 2차전지 소재 수요가 급증하면서 실적 개선이 기대된다고 분석됩니다.",
+            title:
+              "DI동일, 2차전지용 알루미늄박 수주 확대...전기차 수요 급증 수혜",
+            summary:
+              "DI동일이 2차전지용 알루미늄박 생산 능력을 확대하며 국내외 전기차 배터리 업체들로부터 대규모 수주를 확보했습니다. 전기차 시장 성장과 함께 2차전지 소재 수요가 급증하면서 실적 개선이 기대된다고 분석됩니다.",
             date: "2025-09-05",
             sentiment: "positive",
             source: "이데일리",
             url: "https://finance.naver.com/item/news_read.naver?article_id=0005831234&office_id=018&code=001530",
-            keywords: ["2차전지", "알루미늄박", "전기차", "배터리", "수주"]
+            keywords: ["2차전지", "알루미늄박", "전기차", "배터리", "수주"],
           },
           {
             title: "DI동일, 친환경 섬유소재 개발...지속가능 패션 트렌드 대응",
-            summary: "DI동일이 재활용 폴리에스터와 바이오 기반 섬유소재 개발에 집중하고 있습니다. 글로벌 패션업계의 지속가능성 요구가 높아지면서 친환경 섬유 시장에서의 경쟁력 강화를 위한 투자를 확대하고 있다고 밝혔습니다.",
+            summary:
+              "DI동일이 재활용 폴리에스터와 바이오 기반 섬유소재 개발에 집중하고 있습니다. 글로벌 패션업계의 지속가능성 요구가 높아지면서 친환경 섬유 시장에서의 경쟁력 강화를 위한 투자를 확대하고 있다고 밝혔습니다.",
             date: "2025-09-04",
             sentiment: "positive",
             source: "섬유신문",
             url: "https://finance.naver.com/item/news_read.naver?article_id=0001234567&office_id=123&code=001530",
-            keywords: ["친환경", "섬유소재", "재활용", "지속가능", "폴리에스터"]
+            keywords: [
+              "친환경",
+              "섬유소재",
+              "재활용",
+              "지속가능",
+              "폴리에스터",
+            ],
           },
           {
             title: "DI동일, 3분기 실적 개선 전망...섬유 및 전지소재 부문 호조",
-            summary: "DI동일이 3분기 연결기준 매출액이 전년 동기 대비 12% 증가할 것으로 전망된다고 발표했습니다. 주력 섬유사업의 안정적 수익과 2차전지용 알루미늄박 부문의 성장이 실적 개선을 이끌고 있다고 분석됩니다.",
+            summary:
+              "DI동일이 3분기 연결기준 매출액이 전년 동기 대비 12% 증가할 것으로 전망된다고 발표했습니다. 주력 섬유사업의 안정적 수익과 2차전지용 알루미늄박 부문의 성장이 실적 개선을 이끌고 있다고 분석됩니다.",
             date: "2025-09-03",
             sentiment: "positive",
             source: "머니투데이",
             url: "https://finance.naver.com/item/news_read.naver?article_id=0002345678&office_id=008&code=001530",
-            keywords: ["실적", "섬유사업", "전지소재", "매출", "성장"]
+            keywords: ["실적", "섬유사업", "전지소재", "매출", "성장"],
           },
           {
             title: "원자재 가격 상승으로 DI동일 등 섬유업체 수익성 압박",
-            summary: "면화, 폴리에스터 원료 등 주요 섬유 원자재 가격이 상승하면서 DI동일을 비롯한 국내 섬유업체들이 수익성 악화 우려에 직면했습니다. 업계에서는 제품 가격 인상과 원가 절감을 통한 대응이 필요하다고 지적합니다.",
+            summary:
+              "면화, 폴리에스터 원료 등 주요 섬유 원자재 가격이 상승하면서 DI동일을 비롯한 국내 섬유업체들이 수익성 악화 우려에 직면했습니다. 업계에서는 제품 가격 인상과 원가 절감을 통한 대응이 필요하다고 지적합니다.",
             date: "2025-09-02",
             sentiment: "negative",
             source: "한국섬유신문",
             url: "https://finance.naver.com/item/news_read.naver?article_id=0003456789&office_id=456&code=001530",
-            keywords: ["원자재", "면화", "폴리에스터", "수익성", "가격상승"]
+            keywords: ["원자재", "면화", "폴리에스터", "수익성", "가격상승"],
           },
           {
             title: "DI동일, 전지소재 R&D센터 신설...차세대 배터리 기술 개발",
-            summary: "DI동일이 전지소재 전용 R&D센터를 신설하고 차세대 배터리용 고성능 알루미늄박 개발에 나선다고 발표했습니다. 전고체 배터리와 차세대 리튬이온배터리용 소재 개발을 통해 미래 전지시장 선점을 목표로 하고 있습니다.",
+            summary:
+              "DI동일이 전지소재 전용 R&D센터를 신설하고 차세대 배터리용 고성능 알루미늄박 개발에 나선다고 발표했습니다. 전고체 배터리와 차세대 리튬이온배터리용 소재 개발을 통해 미래 전지시장 선점을 목표로 하고 있습니다.",
             date: "2025-09-01",
             sentiment: "positive",
             source: "전자신문",
             url: "https://finance.naver.com/item/news_read.naver?article_id=0004567890&office_id=030&code=001530",
-            keywords: ["R&D센터", "전지소재", "차세대배터리", "전고체", "리튬이온"]
-          }
+            keywords: [
+              "R&D센터",
+              "전지소재",
+              "차세대배터리",
+              "전고체",
+              "리튬이온",
+            ],
+          },
         ];
       }
 
       function generateAIAnalysis(technical) {
         let overallSignal = "보합";
         let confidence = 0;
-        
+
         // 기술적 분석 점수
         let techScore = 0;
         if (technical.trend === "강한상승") techScore += 3;
         else if (technical.trend === "상승") techScore += 1;
         else if (technical.trend === "하락") techScore -= 1;
         else if (technical.trend === "강한하락") techScore -= 3;
-        
+
         if (technical.macdSignal === "상승") techScore += 1;
         else techScore -= 1;
-        
+
         if (parseFloat(technical.rci9) > 80) techScore -= 1;
         else if (parseFloat(technical.rci9) < -80) techScore += 1;
-        
+
         if (parseFloat(technical.volumeRatio) > 1.5) techScore += 1;
-        
+
         const totalScore = techScore;
-        
+
         if (totalScore >= 3) {
           overallSignal = "매수";
           confidence = Math.min(90, 60 + totalScore * 5);
@@ -2710,9 +2794,13 @@
           overallSignal = "보합";
           confidence = 45;
         }
-        
+
         // GPT 스타일 종합 서술 생성
-        const aiCommentary = generateAICommentary(technical, overallSignal, confidence);
+        const aiCommentary = generateAICommentary(
+          technical,
+          overallSignal,
+          confidence
+        );
 
         return {
           signal: overallSignal,
@@ -2720,22 +2808,27 @@
           targetPrice: calculateTargetPrice(technical, overallSignal),
           timeHorizon: "1-2주",
           riskLevel: totalScore > 2 || totalScore < -2 ? "중간" : "낮음",
-          commentary: aiCommentary
+          commentary: aiCommentary,
         };
       }
 
       function generateAICommentary(technical, signal, confidence) {
-
         // 기술적 상황 분석
-        const trendAnalysis = technical.trend === "강한상승" ? "강력한 상승 모멘텀" :
-                             technical.trend === "상승" ? "긍정적 상승 추세" :
-                             technical.trend === "하락" ? "조정 국면" : "횡보 패턴";
+        const trendAnalysis =
+          technical.trend === "강한상승"
+            ? "강력한 상승 모멘텀"
+            : technical.trend === "상승"
+            ? "긍정적 상승 추세"
+            : technical.trend === "하락"
+            ? "조정 국면"
+            : "횡보 패턴";
 
-        const macdAnalysis = technical.macdSignal === "상승" ? "상승 동력 확인" : "하락 압력 지속";
-        
+        const macdAnalysis =
+          technical.macdSignal === "상승" ? "상승 동력 확인" : "하락 압력 지속";
+
         // 종합 서술문 생성
         let commentary = `**DI동일(001530) 종합 투자분석**\n\n`;
-        
+
         // 1. 사업 현황 분석
         commentary += `**🏭 사업 현황:** DI동일은 1955년 설립된 섬유 전문 기업으로, 최근 2차전지용 알루미늄박 사업을 신성장동력으로 육성하고 있습니다. `;
         commentary += `전기차 시장 급성장과 함께 2차전지 소재 수요가 크게 증가하면서 알루미늄박 부문의 성장이 주목받고 있으며, `;
@@ -2744,7 +2837,7 @@
         // 2. 기술적 분석
         commentary += `**📊 기술적 분석:** 현재 주가는 ${technical.currentPrice.toLocaleString()}원으로 ${trendAnalysis}을 보이고 있습니다. `;
         commentary += `MACD 지표는 ${macdAnalysis}되고 있으며, `;
-        
+
         if (technical.currentPrice > parseFloat(technical.ma20)) {
           commentary += `20일 이동평균선(${technical.ma20}원) 상단에서 거래되고 있어 단기 강세가 지속되고 있습니다. `;
         } else {
@@ -2784,7 +2877,7 @@
         const currentPrice = technical.currentPrice;
         const ma20 = parseFloat(technical.ma20);
         const ma60 = parseFloat(technical.ma60);
-        
+
         if (signal === "매수") {
           return Math.round(currentPrice * 1.08); // 8% 상승 목표
         } else if (signal === "매도") {
@@ -2802,73 +2895,82 @@
         // DI동일 관련 최신 핵심 키워드 (소액주주, 합병 이슈 반영)
         const keywordFreq = {
           // 최신 핫이슈 (높은 빈도)
-          '소액주주': 8,
-          '합병': 7,
-          '경영권': 6,
-          '주주총회': 5,
-          
+          소액주주: 8,
+          합병: 7,
+          경영권: 6,
+          주주총회: 5,
+
           // 2차전지 사업 (중간 빈도)
-          '2차전지': 9,
-          '알루미늄박': 8,
-          '전기차': 7,
-          '배터리소재': 6,
-          'LG에너지솔루션': 5,
-          'SK온': 4,
-          
+          "2차전지": 9,
+          알루미늄박: 8,
+          전기차: 7,
+          배터리소재: 6,
+          LG에너지솔루션: 5,
+          SK온: 4,
+
           // 섬유 사업 (기본 빈도)
-          '섬유': 6,
-          '폴리에스터': 5,
-          '직물': 4,
-          '원사': 3,
-          
+          섬유: 6,
+          폴리에스터: 5,
+          직물: 4,
+          원사: 3,
+
           // 투자 관련
-          '실적': 7,
-          '매출': 6,
-          '영업이익': 5,
-          'R&D': 4,
-          '투자': 5,
-          '수주': 4,
-          
+          실적: 7,
+          매출: 6,
+          영업이익: 5,
+          "R&D": 4,
+          투자: 5,
+          수주: 4,
+
           // 시장 이슈
-          '원자재가격': 4,
-          '환율': 3,
-          '친환경': 4,
-          '지속가능': 3,
-          
+          원자재가격: 4,
+          환율: 3,
+          친환경: 4,
+          지속가능: 3,
+
           // 기타 키워드
-          '차세대기술': 3,
-          '리튬이온': 3,
-          '전고체배터리': 2,
-          '글로벌': 3,
-          '수출': 2
+          차세대기술: 3,
+          리튬이온: 3,
+          전고체배터리: 2,
+          글로벌: 3,
+          수출: 2,
         };
-        
+
         // 빈도순 정렬
         const sortedKeywords = Object.entries(keywordFreq)
-          .sort(([,a], [,b]) => b - a)
+          .sort(([, a], [, b]) => b - a)
           .slice(0, 15); // 상위 15개
-        
+
         if (sortedKeywords.length === 0) {
           return '<p style="color: #999; font-style: italic;">키워드 데이터가 없습니다.</p>';
         }
-        
+
         // 워드클라우드 스타일 생성
         const maxFreq = sortedKeywords[0][1];
-        const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e'];
-        
-        return sortedKeywords.map(([keyword, freq], index) => {
-          const fontSize = Math.max(12, (freq / maxFreq) * 24 + 12);
-          const color = colors[index % colors.length];
-          const opacity = 0.7 + (freq / maxFreq) * 0.3;
-          
-          return `
+        const colors = [
+          "#3498db",
+          "#e74c3c",
+          "#2ecc71",
+          "#f39c12",
+          "#9b59b6",
+          "#1abc9c",
+          "#34495e",
+        ];
+
+        return sortedKeywords
+          .map(([keyword, freq], index) => {
+            const fontSize = Math.max(12, (freq / maxFreq) * 24 + 12);
+            const color = colors[index % colors.length];
+            const opacity = 0.7 + (freq / maxFreq) * 0.3;
+
+            return `
             <span style="
               font-size: ${fontSize}px;
               color: ${color};
               opacity: ${opacity};
               margin: 5px 8px;
               display: inline-block;
-              font-weight: ${freq > 1 ? 'bold' : 'normal'};
+              font-weight: ${freq > 1 ? "bold" : "normal"};
               padding: 4px 8px;
               border-radius: 15px;
               background: ${color}15;
@@ -2881,15 +2983,19 @@
               ${keyword}
             </span>
           `;
-        }).join('');
+          })
+          .join("");
       }
 
       function displayAnalysisResults(technical, ai) {
         const contentEl = document.getElementById("analysisContent");
-        
-        const signalClass = ai.signal.includes("매수") ? "signal-buy" : 
-                           ai.signal.includes("매도") ? "signal-sell" : "signal-hold";
-        
+
+        const signalClass = ai.signal.includes("매수")
+          ? "signal-buy"
+          : ai.signal.includes("매도")
+          ? "signal-sell"
+          : "signal-hold";
+
         contentEl.innerHTML = `
           <div class="analysis-section">
             <h3>🎯 종합 투자 의견</h3>
@@ -2906,23 +3012,38 @@
           <div class="analysis-section">
             <h3>🤖 AI 종합 분석 리포트</h3>
             <div style="background: white; padding: 20px; border-radius: 10px; line-height: 1.8; border: 2px solid #e8e8e8;">
-              ${ai.commentary.split('\n').map(paragraph => 
-                paragraph.trim() ? `<p style="margin-bottom: 15px;">${paragraph}</p>` : ''
-              ).join('')}
+              ${ai.commentary
+                .split("\n")
+                .map((paragraph) =>
+                  paragraph.trim()
+                    ? `<p style="margin-bottom: 15px;">${paragraph}</p>`
+                    : ""
+                )
+                .join("")}
             </div>
           </div>
 
           <div class="analysis-section">
             <h3>📊 기술적 분석</h3>
             <p><strong>현재가:</strong> ${technical.currentPrice.toLocaleString()}원 
-               (${technical.priceChangePercent > 0 ? '+' : ''}${technical.priceChangePercent.toFixed(2)}%)</p>
+               (${
+                 technical.priceChangePercent > 0 ? "+" : ""
+               }${technical.priceChangePercent.toFixed(2)}%)</p>
             <p><strong>주요 추세:</strong> ${technical.trend}</p>
             <p><strong>이동평균:</strong> 
-               5일(${technical.ma5}) | 20일(${technical.ma20}) | 60일(${technical.ma60})</p>
-            <p><strong>MACD 신호:</strong> ${technical.macdSignal} (${technical.macdValue})</p>
-            <p><strong>RCI:</strong> 단기(${technical.rci9}) | 장기(${technical.rci26})</p>
+               5일(${technical.ma5}) | 20일(${technical.ma20}) | 60일(${
+          technical.ma60
+        })</p>
+            <p><strong>MACD 신호:</strong> ${technical.macdSignal} (${
+          technical.macdValue
+        })</p>
+            <p><strong>RCI:</strong> 단기(${technical.rci9}) | 장기(${
+          technical.rci26
+        })</p>
             <p><strong>거래량:</strong> 평균 대비 ${technical.volumeRatio}배</p>
-            <p><strong>지지선:</strong> ${technical.support}원 | <strong>저항선:</strong> ${technical.resistance}원</p>
+            <p><strong>지지선:</strong> ${
+              technical.support
+            }원 | <strong>저항선:</strong> ${technical.resistance}원</p>
           </div>
 
           <div class="analysis-section">
@@ -2949,7 +3070,7 @@
           <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0f0f0; border-radius: 10px;">
             <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9em;">
               🤖 AI 분석 완료: ${new Date().toLocaleString()} | 
-              데이터 기준: ${stockData[stockData.length-1].localDate}
+              데이터 기준: ${stockData[stockData.length - 1].localDate}
             </p>
             <p style="margin: 0; color: #888; font-size: 0.8em;">
               📰 뉴스 데이터 출처: 
