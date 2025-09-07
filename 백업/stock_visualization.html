@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DI 주식 (001530) 데이터 시각화</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 2.5em;
+        font-weight: 300;
+      }
+
+      .header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.1em;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 30px;
+        background: #f8f9fa;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        transition: transform 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .stat-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 10px 0;
+      }
+
+      .stat-label {
+        color: #7f8c8d;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .chart-container {
+        padding: 30px;
+        margin: 20px 0;
+      }
+
+      .chart-title {
+        font-size: 1.5em;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 300;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 400px;
+        margin-bottom: 40px;
+      }
+
+      .controls {
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        margin: 5px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+      }
+
+      .btn.active {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      }
+
+      .footer {
+        background: #34495e;
+        color: white;
+        text-align: center;
+        padding: 20px;
+        font-size: 0.9em;
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 1.8em;
+        }
+
+        .chart-wrapper {
+          height: 300px;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏢 DI 주식 (001530)</h1>
+        <p>실시간 주식 데이터 시각화 대시보드</p>
+      </div>
+
+      <div class="stats-grid" id="statsGrid">
+        <!-- 통계 카드들이 여기에 동적으로 생성됩니다 -->
+      </div>
+
+      <div class="controls">
+        <button class="btn active" onclick="showChart('price')">
+          가격 차트
+        </button>
+        <button class="btn" onclick="showChart('volume')">거래량 차트</button>
+        <button class="btn" onclick="showChart('foreign')">
+          외국인 보유율
+        </button>
+        <button class="btn" onclick="showChart('all')">전체 보기</button>
+      </div>
+
+      <div class="chart-container">
+        <div id="priceChart" class="chart-section">
+          <div class="chart-title">📈 주가 캔들스틱 차트</div>
+          <div class="chart-wrapper">
+            <canvas id="candlestickChart"></canvas>
+          </div>
+        </div>
+
+        <div id="volumeChart" class="chart-section" style="display: none">
+          <div class="chart-title">📊 거래량 차트</div>
+          <div class="chart-wrapper">
+            <canvas id="volumeChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <div id="foreignChart" class="chart-section" style="display: none">
+          <div class="chart-title">🌍 외국인 보유율 추이</div>
+          <div class="chart-wrapper">
+            <canvas id="foreignChartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>© 2025 주식 데이터 시각화 도구 | 네이버 금융 API 기반</p>
+      </div>
+    </div>
+
+    <script>
+      let stockData = [];
+      let charts = {};
+
+      // 주식 데이터 (JSON 파일에서 복사한 데이터)
+      const stockDataRaw = {
+        code: "001530",
+        infoType: "item",
+        periodType: "dayCandle",
+        newlyListed: false,
+        stockExchangeType: "KRX",
+        hasVolume: true,
+        decimalUnit: 0,
+        priceInfos: [],
+      };
+
+      // JSON 파일 로드 (CORS 문제 해결을 위해 데이터를 직접 포함)
+      async function loadStockData() {
+        try {
+          // 외부 JSON 파일을 읽어서 데이터를 가져오는 함수
+          await loadJSONData();
+
+          // 데이터가 있는 경우에만 처리
+          if (stockDataRaw.priceInfos && stockDataRaw.priceInfos.length > 0) {
+            stockData = stockDataRaw.priceInfos;
+
+            // 날짜순으로 정렬
+            stockData.sort(
+              (a, b) => new Date(a.localDate) - new Date(b.localDate)
+            );
+
+            // 최근 100일 데이터만 사용 (성능 최적화)
+            stockData = stockData.slice(-100);
+
+            initializeStats();
+            initializeCharts();
+          }
+        } catch (error) {
+          console.error("데이터 로드 실패:", error);
+          showFileInput();
+        }
+      }
+
+      // JSON 데이터를 동적으로 로드하는 함수
+      async function loadJSONData() {
+        // 로컬 서버 환경에서는 fetch를 시도
+        try {
+          const response = await fetch(
+            "stock_data_001530_20250908_000628.json"
+          );
+          if (response.ok) {
+            const data = await response.json();
+            stockDataRaw.priceInfos = data.priceInfos;
+            return;
+          }
+        } catch (fetchError) {
+          console.log("Fetch 실패, 대안 방법 사용:", fetchError.message);
+        }
+
+        // Fetch가 실패하면 파일 입력을 통해 데이터 로드
+        showFileInput();
+      }
+
+      // 파일 입력 UI를 표시하는 함수
+      function showFileInput() {
+        const fileInputHTML = `
+           <div style="text-align: center; padding: 40px; background: #f8f9fa; margin: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+             <div style="font-size: 4em; margin-bottom: 20px;">📁</div>
+             <h3 style="color: #2c3e50; margin-bottom: 15px;">JSON 파일을 선택해주세요</h3>
+             <p style="color: #7f8c8d; margin-bottom: 25px; line-height: 1.6;">
+               브라우저 보안 정책(CORS)으로 인해 로컬 파일을 직접 읽을 수 없습니다.<br>
+               <strong>stock_data_001530_20250908_000628.json</strong> 파일을 선택해주세요.
+             </p>
+             <div style="border: 2px dashed #3498db; border-radius: 10px; padding: 20px; margin: 20px 0; background: #ecf0f1;">
+               <input type="file" id="jsonFileInput" accept=".json" style="
+                 margin: 10px; 
+                 padding: 10px;
+                 border: 1px solid #bdc3c7;
+                 border-radius: 5px;
+                 background: white;
+                 font-size: 14px;
+               ">
+             </div>
+             <button onclick="loadSelectedFile()" class="btn" style="font-size: 16px; padding: 15px 30px;">
+               📊 파일 로드하여 차트 생성
+             </button>
+             <div style="margin-top: 25px; padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404; font-size: 14px;">
+               <strong>💡 팁:</strong> 로컬 서버를 실행하면 자동으로 파일을 읽을 수 있습니다.<br>
+               <code>python -m http.server 8000</code> 또는 <code>npx http-server</code>
+             </div>
+           </div>
+         `;
+
+        document.querySelector(".chart-container").innerHTML = fileInputHTML;
+
+        // 통계 섹션도 초기 상태로 설정
+        document.getElementById("statsGrid").innerHTML = `
+           <div class="stat-card">
+             <div class="stat-label">상태</div>
+             <div class="stat-value" style="color: #f39c12; font-size: 1.5em;">
+               파일 로드 대기중
+             </div>
+           </div>
+         `;
+      }
+
+      // 선택된 파일을 로드하는 함수
+      function loadSelectedFile() {
+        const fileInput = document.getElementById("jsonFileInput");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          alert("파일을 선택해주세요.");
+          return;
+        }
+
+        // 로딩 표시
+        document.getElementById("statsGrid").innerHTML = `
+           <div class="stat-card">
+             <div class="stat-label">상태</div>
+             <div class="stat-value" style="color: #3498db; font-size: 1.5em;">
+               📊 데이터 로딩중...
+             </div>
+           </div>
+         `;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const data = JSON.parse(e.target.result);
+
+            if (!data.priceInfos || data.priceInfos.length === 0) {
+              throw new Error("유효한 주식 데이터가 없습니다.");
+            }
+
+            stockDataRaw.priceInfos = data.priceInfos;
+
+            // UI 복원
+            restoreChartUI();
+
+            // 데이터 처리 및 차트 생성
+            stockData = stockDataRaw.priceInfos;
+            stockData.sort(
+              (a, b) => new Date(a.localDate) - new Date(b.localDate)
+            );
+            stockData = stockData.slice(-100);
+
+            // 성공 메시지 표시
+            document.getElementById("statsGrid").innerHTML = `
+               <div class="stat-card">
+                 <div class="stat-label">상태</div>
+                 <div class="stat-value" style="color: #27ae60; font-size: 1.5em;">
+                   ✅ 로드 완료
+                 </div>
+               </div>
+             `;
+
+            // 잠시 후 정상 통계로 전환
+            setTimeout(() => {
+              initializeStats();
+              initializeCharts();
+            }, 500);
+          } catch (error) {
+            console.error("파일 로드 오류:", error);
+            document.getElementById("statsGrid").innerHTML = `
+               <div class="stat-card">
+                 <div class="stat-label">오류</div>
+                 <div class="stat-value" style="color: #e74c3c; font-size: 1.2em;">
+                   ❌ 파일 로드 실패
+                 </div>
+               </div>
+             `;
+            alert("JSON 파일 파싱 오류: " + error.message);
+          }
+        };
+
+        reader.readAsText(file);
+      }
+
+      // 차트 UI를 복원하는 함수
+      function restoreChartUI() {
+        document.querySelector(".chart-container").innerHTML = `
+           <div id="priceChart" class="chart-section">
+             <div class="chart-title">📈 주가 캔들스틱 차트</div>
+             <div class="chart-wrapper">
+               <canvas id="candlestickChart"></canvas>
+             </div>
+           </div>
+
+           <div id="volumeChart" class="chart-section" style="display: none">
+             <div class="chart-title">📊 거래량 차트</div>
+             <div class="chart-wrapper">
+               <canvas id="volumeChartCanvas"></canvas>
+             </div>
+           </div>
+
+           <div id="foreignChart" class="chart-section" style="display: none">
+             <div class="chart-title">🌍 외국인 보유율 추이</div>
+             <div class="chart-wrapper">
+               <canvas id="foreignChartCanvas"></canvas>
+             </div>
+           </div>
+         `;
+      }
+
+      // 통계 초기화
+      function initializeStats() {
+        const latest = stockData[stockData.length - 1];
+        const oldest = stockData[0];
+        const prices = stockData.map((d) => d.closePrice);
+        const volumes = stockData.map((d) => d.accumulatedTradingVolume);
+
+        const maxPrice = Math.max(...prices);
+        const minPrice = Math.min(...prices);
+        const avgVolume = volumes.reduce((a, b) => a + b, 0) / volumes.length;
+        const priceChange = latest.closePrice - oldest.closePrice;
+        const priceChangePercent = (
+          (priceChange / oldest.closePrice) *
+          100
+        ).toFixed(2);
+
+        const statsHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">현재가</div>
+                    <div class="stat-value" style="color: ${
+                      latest.closePrice >= oldest.closePrice
+                        ? "#27ae60"
+                        : "#e74c3c"
+                    }">
+                        ${latest.closePrice.toLocaleString()}원
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">등락률</div>
+                    <div class="stat-value" style="color: ${
+                      priceChange >= 0 ? "#27ae60" : "#e74c3c"
+                    }">
+                        ${priceChange >= 0 ? "+" : ""}${priceChangePercent}%
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">52주 최고가</div>
+                    <div class="stat-value">${maxPrice.toLocaleString()}원</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">52주 최저가</div>
+                    <div class="stat-value">${minPrice.toLocaleString()}원</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">평균 거래량</div>
+                    <div class="stat-value">${Math.round(
+                      avgVolume
+                    ).toLocaleString()}주</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">외국인 보유율</div>
+                    <div class="stat-value">${
+                      latest.foreignRetentionRate
+                    }%</div>
+                </div>
+            `;
+
+        document.getElementById("statsGrid").innerHTML = statsHTML;
+      }
+
+      // 차트 초기화
+      function initializeCharts() {
+        createCandlestickChart();
+        createVolumeChart();
+        createForeignChart();
+      }
+
+      // 날짜 문자열을 Date 객체로 변환하는 함수
+      function parseDate(dateStr) {
+        // YYYYMMDD 형식을 YYYY-MM-DD로 변환
+        const year = dateStr.substring(0, 4);
+        const month = dateStr.substring(4, 6);
+        const day = dateStr.substring(6, 8);
+        return new Date(year, month - 1, day);
+      }
+
+      // 캔들스틱 차트 생성
+      function createCandlestickChart() {
+        const ctx = document
+          .getElementById("candlestickChart")
+          .getContext("2d");
+
+        charts.candlestick = new Chart(ctx, {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: "종가",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.closePrice,
+                })),
+                borderColor: "#3498db",
+                backgroundColor: "rgba(52, 152, 219, 0.1)",
+                fill: true,
+                tension: 0.1,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+              },
+              {
+                label: "고가",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.highPrice,
+                })),
+                borderColor: "#e74c3c",
+                backgroundColor: "transparent",
+                borderDash: [5, 5],
+                pointRadius: 2,
+                pointHoverRadius: 4,
+              },
+              {
+                label: "저가",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.lowPrice,
+                })),
+                borderColor: "#27ae60",
+                backgroundColor: "transparent",
+                borderDash: [5, 5],
+                pointRadius: 2,
+                pointHoverRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: "index",
+            },
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  displayFormats: {
+                    day: "MM/dd",
+                    week: "MM/dd",
+                    month: "yy/MM",
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "날짜",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "가격 (원)",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value.toLocaleString() + "원";
+                  },
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return (
+                      context.dataset.label +
+                      ": " +
+                      context.parsed.y.toLocaleString() +
+                      "원"
+                    );
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // 거래량 차트 생성
+      function createVolumeChart() {
+        const ctx = document
+          .getElementById("volumeChartCanvas")
+          .getContext("2d");
+
+        charts.volume = new Chart(ctx, {
+          type: "bar",
+          data: {
+            datasets: [
+              {
+                label: "거래량",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.accumulatedTradingVolume,
+                })),
+                backgroundColor: stockData.map((item, index) => {
+                  if (index === 0) return "#3498db";
+                  const prevClose = stockData[index - 1].closePrice;
+                  return item.closePrice >= prevClose ? "#27ae60" : "#e74c3c";
+                }),
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  displayFormats: {
+                    day: "MM/dd",
+                    week: "MM/dd",
+                    month: "yy/MM",
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "날짜",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "거래량 (주)",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value.toLocaleString() + "주";
+                  },
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return (
+                      "거래량: " + context.parsed.y.toLocaleString() + "주"
+                    );
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // 외국인 보유율 차트 생성
+      function createForeignChart() {
+        const ctx = document
+          .getElementById("foreignChartCanvas")
+          .getContext("2d");
+
+        charts.foreign = new Chart(ctx, {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: "외국인 보유율",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.foreignRetentionRate,
+                })),
+                borderColor: "#9b59b6",
+                backgroundColor: "rgba(155, 89, 182, 0.1)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  displayFormats: {
+                    day: "MM/dd",
+                    week: "MM/dd",
+                    month: "yy/MM",
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "날짜",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "보유율 (%)",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value + "%";
+                  },
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return "외국인 보유율: " + context.parsed.y + "%";
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // 차트 표시 함수
+      function showChart(type) {
+        // 모든 버튼의 active 클래스 제거
+        document
+          .querySelectorAll(".btn")
+          .forEach((btn) => btn.classList.remove("active"));
+
+        // 클릭된 버튼에 active 클래스 추가
+        event.target.classList.add("active");
+
+        // 모든 차트 숨기기
+        document.querySelectorAll(".chart-section").forEach((section) => {
+          section.style.display = "none";
+        });
+
+        // 선택된 차트 표시
+        if (type === "price") {
+          document.getElementById("priceChart").style.display = "block";
+        } else if (type === "volume") {
+          document.getElementById("volumeChart").style.display = "block";
+        } else if (type === "foreign") {
+          document.getElementById("foreignChart").style.display = "block";
+        } else if (type === "all") {
+          document.querySelectorAll(".chart-section").forEach((section) => {
+            section.style.display = "block";
+          });
+        }
+
+        // 차트 크기 재조정
+        setTimeout(() => {
+          Object.values(charts).forEach((chart) => {
+            if (chart) chart.resize();
+          });
+        }, 100);
+      }
+
+      // 페이지 로드 시 데이터 로드
+      window.addEventListener("load", loadStockData);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🏢 DI 주식 (001530) 데이터 시각화</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        font-size: 3em;
+        font-weight: 300;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.2em;
+        opacity: 0.9;
+      }
+
+      .badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-size: 0.9em;
+        font-weight: bold;
+        margin-top: 15px;
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        margin: 30px 0;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      }
+
+      .stat-label {
+        color: #7f8c8d;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+
+      .stat-value {
+        font-size: 2.2em;
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 10px 0;
+      }
+
+      .controls {
+        text-align: center;
+        margin: 40px 0;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        margin: 8px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+      }
+
+      .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+      }
+
+      .btn.active {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+      }
+
+      .chart-container {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        margin: 20px 0;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      }
+
+      .chart-title {
+        font-size: 1.8em;
+        color: #2c3e50;
+        margin-bottom: 25px;
+        text-align: center;
+        font-weight: 400;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 450px;
+        margin-bottom: 20px;
+      }
+
+      .footer {
+        background: rgba(44, 62, 80, 0.9);
+        color: white;
+        text-align: center;
+        padding: 25px;
+        border-radius: 15px;
+        margin-top: 40px;
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2em;
+        }
+        .chart-wrapper {
+          height: 350px;
+        }
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 15px;
+        }
+        .stat-card {
+          padding: 20px;
+        }
+        .stat-value {
+          font-size: 1.8em;
+        }
+        .btn {
+          padding: 12px 20px;
+          font-size: 14px;
+        }
+      }
+
+      .chart-section {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏢 DI 주식 (001530)</h1>
+        <p>실시간 주식 데이터 시각화 대시보드</p>
+        <div class="badge">
+          ✨ 전체 데이터 + 이동평균선 + 일목균형표 + MACD + RCI - 완전판
+        </div>
+      </div>
+
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="controls">
+        <button class="btn active" onclick="showChart('price')">
+          📈 가격 차트
+        </button>
+        <button class="btn" onclick="showChart('volume')">
+          📊 거래량 차트
+        </button>
+        <button class="btn" onclick="showChart('macd')">📈 MACD 차트</button>
+        <button class="btn" onclick="showChart('rci')">📊 RCI 차트</button>
+        <button class="btn" onclick="showChart('foreign')">
+          🌍 외국인 보유율
+        </button>
+        <button class="btn" onclick="showChart('all')">📋 전체 보기</button>
+      </div>
+
+      <div class="chart-container">
+        <div id="priceChart" class="chart-section">
+          <div class="chart-title">
+            📈 주가 추이 + 이동평균선 + 일목균형표 (구름대)
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="candlestickChart"></canvas>
+          </div>
+        </div>
+
+        <div id="volumeChart" class="chart-section" style="display: none">
+          <div class="chart-title">📊 일별 거래량</div>
+          <div class="chart-wrapper">
+            <canvas id="volumeChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <div id="macdChart" class="chart-section" style="display: none">
+          <div class="chart-title">📈 MACD 오실레이터 (12,26,9)</div>
+          <div class="chart-wrapper">
+            <canvas id="macdChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <div id="rciChart" class="chart-section" style="display: none">
+          <div class="chart-title">📊 RCI 차트 (9,13,18,26)</div>
+          <div class="chart-wrapper">
+            <canvas id="rciChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <div id="foreignChart" class="chart-section" style="display: none">
+          <div class="chart-title">🌍 외국인 보유율 변화</div>
+          <div class="chart-wrapper">
+            <canvas id="foreignChartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          © 2025 DI 주식 시각화 도구 | 네이버 금융 API 기반 | 전체 93개 데이터
+          포인트
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // 🎯 DI 주식 전체 데이터 (2025.03.28 ~ 2025.09.05, 93개 데이터 포인트)
+      const stockData = [
+        {
+          localDate: "20250328",
+          closePrice: 48200.0,
+          openPrice: 47050.0,
+          highPrice: 48750.0,
+          lowPrice: 46000.0,
+          accumulatedTradingVolume: 165612,
+          foreignRetentionRate: 9.28,
+        },
+        {
+          localDate: "20250331",
+          closePrice: 46800.0,
+          openPrice: 48000.0,
+          highPrice: 48000.0,
+          lowPrice: 45450.0,
+          accumulatedTradingVolume: 100457,
+          foreignRetentionRate: 8.93,
+        },
+        {
+          localDate: "20250401",
+          closePrice: 46750.0,
+          openPrice: 46500.0,
+          highPrice: 46750.0,
+          lowPrice: 45450.0,
+          accumulatedTradingVolume: 93507,
+          foreignRetentionRate: 8.72,
+        },
+        {
+          localDate: "20250402",
+          closePrice: 46500.0,
+          openPrice: 46550.0,
+          highPrice: 46900.0,
+          lowPrice: 45750.0,
+          accumulatedTradingVolume: 39580,
+          foreignRetentionRate: 8.64,
+        },
+        {
+          localDate: "20250403",
+          closePrice: 46350.0,
+          openPrice: 46400.0,
+          highPrice: 46450.0,
+          lowPrice: 45400.0,
+          accumulatedTradingVolume: 36570,
+          foreignRetentionRate: 8.55,
+        },
+        {
+          localDate: "20250404",
+          closePrice: 44850.0,
+          openPrice: 45550.0,
+          highPrice: 46350.0,
+          lowPrice: 43000.0,
+          accumulatedTradingVolume: 89216,
+          foreignRetentionRate: 8.39,
+        },
+        {
+          localDate: "20250407",
+          closePrice: 43050.0,
+          openPrice: 43000.0,
+          highPrice: 44650.0,
+          lowPrice: 41450.0,
+          accumulatedTradingVolume: 47568,
+          foreignRetentionRate: 8.28,
+        },
+        {
+          localDate: "20250408",
+          closePrice: 43000.0,
+          openPrice: 43200.0,
+          highPrice: 44150.0,
+          lowPrice: 42750.0,
+          accumulatedTradingVolume: 39016,
+          foreignRetentionRate: 8.26,
+        },
+        {
+          localDate: "20250409",
+          closePrice: 40350.0,
+          openPrice: 43000.0,
+          highPrice: 43950.0,
+          lowPrice: 39950.0,
+          accumulatedTradingVolume: 54459,
+          foreignRetentionRate: 8.2,
+        },
+        {
+          localDate: "20250410",
+          closePrice: 41350.0,
+          openPrice: 41500.0,
+          highPrice: 42500.0,
+          lowPrice: 39850.0,
+          accumulatedTradingVolume: 45027,
+          foreignRetentionRate: 8.17,
+        },
+        {
+          localDate: "20250411",
+          closePrice: 42850.0,
+          openPrice: 40350.0,
+          highPrice: 42850.0,
+          lowPrice: 40350.0,
+          accumulatedTradingVolume: 31518,
+          foreignRetentionRate: 8.18,
+        },
+        {
+          localDate: "20250414",
+          closePrice: 42700.0,
+          openPrice: 42300.0,
+          highPrice: 42850.0,
+          lowPrice: 41350.0,
+          accumulatedTradingVolume: 34550,
+          foreignRetentionRate: 8.11,
+        },
+        {
+          localDate: "20250415",
+          closePrice: 42600.0,
+          openPrice: 41750.0,
+          highPrice: 42700.0,
+          lowPrice: 41600.0,
+          accumulatedTradingVolume: 31964,
+          foreignRetentionRate: 8.09,
+        },
+        {
+          localDate: "20250416",
+          closePrice: 42500.0,
+          openPrice: 41800.0,
+          highPrice: 42600.0,
+          lowPrice: 41600.0,
+          accumulatedTradingVolume: 27252,
+          foreignRetentionRate: 8.07,
+        },
+        {
+          localDate: "20250417",
+          closePrice: 42400.0,
+          openPrice: 41600.0,
+          highPrice: 42600.0,
+          lowPrice: 41600.0,
+          accumulatedTradingVolume: 32355,
+          foreignRetentionRate: 7.99,
+        },
+        {
+          localDate: "20250418",
+          closePrice: 43950.0,
+          openPrice: 41850.0,
+          highPrice: 44350.0,
+          lowPrice: 41850.0,
+          accumulatedTradingVolume: 32071,
+          foreignRetentionRate: 8.06,
+        },
+        {
+          localDate: "20250421",
+          closePrice: 43950.0,
+          openPrice: 44000.0,
+          highPrice: 44500.0,
+          lowPrice: 43500.0,
+          accumulatedTradingVolume: 30954,
+          foreignRetentionRate: 8.0,
+        },
+        {
+          localDate: "20250422",
+          closePrice: 43900.0,
+          openPrice: 43400.0,
+          highPrice: 44000.0,
+          lowPrice: 43400.0,
+          accumulatedTradingVolume: 13147,
+          foreignRetentionRate: 7.97,
+        },
+        {
+          localDate: "20250423",
+          closePrice: 43850.0,
+          openPrice: 43450.0,
+          highPrice: 43950.0,
+          lowPrice: 41850.0,
+          accumulatedTradingVolume: 31685,
+          foreignRetentionRate: 7.97,
+        },
+        {
+          localDate: "20250424",
+          closePrice: 43750.0,
+          openPrice: 44000.0,
+          highPrice: 44100.0,
+          lowPrice: 43200.0,
+          accumulatedTradingVolume: 23492,
+          foreignRetentionRate: 7.8,
+        },
+        {
+          localDate: "20250425",
+          closePrice: 43850.0,
+          openPrice: 44300.0,
+          highPrice: 45500.0,
+          lowPrice: 43600.0,
+          accumulatedTradingVolume: 45940,
+          foreignRetentionRate: 7.84,
+        },
+        {
+          localDate: "20250428",
+          closePrice: 41650.0,
+          openPrice: 43450.0,
+          highPrice: 43450.0,
+          lowPrice: 41350.0,
+          accumulatedTradingVolume: 85026,
+          foreignRetentionRate: 7.67,
+        },
+        {
+          localDate: "20250429",
+          closePrice: 41600.0,
+          openPrice: 41050.0,
+          highPrice: 41600.0,
+          lowPrice: 38200.0,
+          accumulatedTradingVolume: 175153,
+          foreignRetentionRate: 7.76,
+        },
+        {
+          localDate: "20250430",
+          closePrice: 41350.0,
+          openPrice: 40750.0,
+          highPrice: 41450.0,
+          lowPrice: 40450.0,
+          accumulatedTradingVolume: 31899,
+          foreignRetentionRate: 7.72,
+        },
+        {
+          localDate: "20250502",
+          closePrice: 41100.0,
+          openPrice: 41200.0,
+          highPrice: 41250.0,
+          lowPrice: 40550.0,
+          accumulatedTradingVolume: 30212,
+          foreignRetentionRate: 7.68,
+        },
+        {
+          localDate: "20250507",
+          closePrice: 40600.0,
+          openPrice: 40250.0,
+          highPrice: 40950.0,
+          lowPrice: 39850.0,
+          accumulatedTradingVolume: 24761,
+          foreignRetentionRate: 7.54,
+        },
+        {
+          localDate: "20250508",
+          closePrice: 40250.0,
+          openPrice: 40000.0,
+          highPrice: 40500.0,
+          lowPrice: 40000.0,
+          accumulatedTradingVolume: 18034,
+          foreignRetentionRate: 7.53,
+        },
+        {
+          localDate: "20250509",
+          closePrice: 39750.0,
+          openPrice: 39800.0,
+          highPrice: 40900.0,
+          lowPrice: 38500.0,
+          accumulatedTradingVolume: 51566,
+          foreignRetentionRate: 7.49,
+        },
+        {
+          localDate: "20250512",
+          closePrice: 36000.0,
+          openPrice: 39050.0,
+          highPrice: 39450.0,
+          lowPrice: 34500.0,
+          accumulatedTradingVolume: 143880,
+          foreignRetentionRate: 7.52,
+        },
+        {
+          localDate: "20250513",
+          closePrice: 35750.0,
+          openPrice: 36000.0,
+          highPrice: 36800.0,
+          lowPrice: 35550.0,
+          accumulatedTradingVolume: 24437,
+          foreignRetentionRate: 7.54,
+        },
+        {
+          localDate: "20250514",
+          closePrice: 36250.0,
+          openPrice: 35500.0,
+          highPrice: 36400.0,
+          lowPrice: 35400.0,
+          accumulatedTradingVolume: 30041,
+          foreignRetentionRate: 7.54,
+        },
+        {
+          localDate: "20250515",
+          closePrice: 35900.0,
+          openPrice: 36000.0,
+          highPrice: 36700.0,
+          lowPrice: 35550.0,
+          accumulatedTradingVolume: 17037,
+          foreignRetentionRate: 7.46,
+        },
+        {
+          localDate: "20250516",
+          closePrice: 37100.0,
+          openPrice: 35550.0,
+          highPrice: 37350.0,
+          lowPrice: 35350.0,
+          accumulatedTradingVolume: 45500,
+          foreignRetentionRate: 7.56,
+        },
+        {
+          localDate: "20250519",
+          closePrice: 37100.0,
+          openPrice: 36400.0,
+          highPrice: 37250.0,
+          lowPrice: 35500.0,
+          accumulatedTradingVolume: 27433,
+          foreignRetentionRate: 7.55,
+        },
+        {
+          localDate: "20250520",
+          closePrice: 37050.0,
+          openPrice: 36650.0,
+          highPrice: 37250.0,
+          lowPrice: 36450.0,
+          accumulatedTradingVolume: 27063,
+          foreignRetentionRate: 7.71,
+        },
+        {
+          localDate: "20250521",
+          closePrice: 36850.0,
+          openPrice: 36600.0,
+          highPrice: 36950.0,
+          lowPrice: 36300.0,
+          accumulatedTradingVolume: 31668,
+          foreignRetentionRate: 7.65,
+        },
+        {
+          localDate: "20250522",
+          closePrice: 36800.0,
+          openPrice: 36400.0,
+          highPrice: 36850.0,
+          lowPrice: 36100.0,
+          accumulatedTradingVolume: 40509,
+          foreignRetentionRate: 7.54,
+        },
+        {
+          localDate: "20250523",
+          closePrice: 37050.0,
+          openPrice: 36500.0,
+          highPrice: 37450.0,
+          lowPrice: 36500.0,
+          accumulatedTradingVolume: 33283,
+          foreignRetentionRate: 7.62,
+        },
+        {
+          localDate: "20250526",
+          closePrice: 37000.0,
+          openPrice: 36600.0,
+          highPrice: 37500.0,
+          lowPrice: 36350.0,
+          accumulatedTradingVolume: 68069,
+          foreignRetentionRate: 7.56,
+        },
+        {
+          localDate: "20250527",
+          closePrice: 35750.0,
+          openPrice: 37400.0,
+          highPrice: 37400.0,
+          lowPrice: 35350.0,
+          accumulatedTradingVolume: 47119,
+          foreignRetentionRate: 7.47,
+        },
+        {
+          localDate: "20250528",
+          closePrice: 33600.0,
+          openPrice: 35800.0,
+          highPrice: 35800.0,
+          lowPrice: 33350.0,
+          accumulatedTradingVolume: 78147,
+          foreignRetentionRate: 7.49,
+        },
+        {
+          localDate: "20250529",
+          closePrice: 33150.0,
+          openPrice: 33700.0,
+          highPrice: 33850.0,
+          lowPrice: 31050.0,
+          accumulatedTradingVolume: 81212,
+          foreignRetentionRate: 7.53,
+        },
+        {
+          localDate: "20250530",
+          closePrice: 33300.0,
+          openPrice: 33400.0,
+          highPrice: 33700.0,
+          lowPrice: 32550.0,
+          accumulatedTradingVolume: 45132,
+          foreignRetentionRate: 7.41,
+        },
+        {
+          localDate: "20250602",
+          closePrice: 33800.0,
+          openPrice: 33100.0,
+          highPrice: 34100.0,
+          lowPrice: 32800.0,
+          accumulatedTradingVolume: 31153,
+          foreignRetentionRate: 7.46,
+        },
+        {
+          localDate: "20250604",
+          closePrice: 33900.0,
+          openPrice: 33450.0,
+          highPrice: 34350.0,
+          lowPrice: 33450.0,
+          accumulatedTradingVolume: 26410,
+          foreignRetentionRate: 7.39,
+        },
+        {
+          localDate: "20250605",
+          closePrice: 34750.0,
+          openPrice: 33550.0,
+          highPrice: 35200.0,
+          lowPrice: 33550.0,
+          accumulatedTradingVolume: 31491,
+          foreignRetentionRate: 7.4,
+        },
+        {
+          localDate: "20250609",
+          closePrice: 37200.0,
+          openPrice: 35750.0,
+          highPrice: 37900.0,
+          lowPrice: 35000.0,
+          accumulatedTradingVolume: 52567,
+          foreignRetentionRate: 7.3,
+        },
+        {
+          localDate: "20250610",
+          closePrice: 37400.0,
+          openPrice: 37400.0,
+          highPrice: 37500.0,
+          lowPrice: 36700.0,
+          accumulatedTradingVolume: 30804,
+          foreignRetentionRate: 7.27,
+        },
+        {
+          localDate: "20250611",
+          closePrice: 38450.0,
+          openPrice: 37400.0,
+          highPrice: 38700.0,
+          lowPrice: 37200.0,
+          accumulatedTradingVolume: 48908,
+          foreignRetentionRate: 7.37,
+        },
+        {
+          localDate: "20250612",
+          closePrice: 38300.0,
+          openPrice: 38200.0,
+          highPrice: 39250.0,
+          lowPrice: 37900.0,
+          accumulatedTradingVolume: 50411,
+          foreignRetentionRate: 7.26,
+        },
+        {
+          localDate: "20250613",
+          closePrice: 37700.0,
+          openPrice: 38300.0,
+          highPrice: 38300.0,
+          lowPrice: 35400.0,
+          accumulatedTradingVolume: 107727,
+          foreignRetentionRate: 7.02,
+        },
+        {
+          localDate: "20250616",
+          closePrice: 37750.0,
+          openPrice: 36550.0,
+          highPrice: 37900.0,
+          lowPrice: 36300.0,
+          accumulatedTradingVolume: 42671,
+          foreignRetentionRate: 7.04,
+        },
+        {
+          localDate: "20250617",
+          closePrice: 38700.0,
+          openPrice: 37800.0,
+          highPrice: 39100.0,
+          lowPrice: 37350.0,
+          accumulatedTradingVolume: 64806,
+          foreignRetentionRate: 7.43,
+        },
+        {
+          localDate: "20250618",
+          closePrice: 38600.0,
+          openPrice: 38150.0,
+          highPrice: 38950.0,
+          lowPrice: 38100.0,
+          accumulatedTradingVolume: 20250,
+          foreignRetentionRate: 7.35,
+        },
+        {
+          localDate: "20250619",
+          closePrice: 38950.0,
+          openPrice: 38300.0,
+          highPrice: 38950.0,
+          lowPrice: 38100.0,
+          accumulatedTradingVolume: 21327,
+          foreignRetentionRate: 7.33,
+        },
+        {
+          localDate: "20250620",
+          closePrice: 39000.0,
+          openPrice: 38900.0,
+          highPrice: 39600.0,
+          lowPrice: 38700.0,
+          accumulatedTradingVolume: 78255,
+          foreignRetentionRate: 7.27,
+        },
+        {
+          localDate: "20250623",
+          closePrice: 38600.0,
+          openPrice: 38650.0,
+          highPrice: 39000.0,
+          lowPrice: 38250.0,
+          accumulatedTradingVolume: 51351,
+          foreignRetentionRate: 7.25,
+        },
+        {
+          localDate: "20250624",
+          closePrice: 38700.0,
+          openPrice: 38600.0,
+          highPrice: 39400.0,
+          lowPrice: 37300.0,
+          accumulatedTradingVolume: 92583,
+          foreignRetentionRate: 7.11,
+        },
+        {
+          localDate: "20250625",
+          closePrice: 39400.0,
+          openPrice: 38400.0,
+          highPrice: 39750.0,
+          lowPrice: 37900.0,
+          accumulatedTradingVolume: 72831,
+          foreignRetentionRate: 7.26,
+        },
+        {
+          localDate: "20250626",
+          closePrice: 39250.0,
+          openPrice: 39500.0,
+          highPrice: 39650.0,
+          lowPrice: 38300.0,
+          accumulatedTradingVolume: 41423,
+          foreignRetentionRate: 7.16,
+        },
+        {
+          localDate: "20250627",
+          closePrice: 39550.0,
+          openPrice: 40000.0,
+          highPrice: 40500.0,
+          lowPrice: 39500.0,
+          accumulatedTradingVolume: 54263,
+          foreignRetentionRate: 7.05,
+        },
+        {
+          localDate: "20250630",
+          closePrice: 38700.0,
+          openPrice: 39450.0,
+          highPrice: 39450.0,
+          lowPrice: 38250.0,
+          accumulatedTradingVolume: 70422,
+          foreignRetentionRate: 6.87,
+        },
+        {
+          localDate: "20250701",
+          closePrice: 42000.0,
+          openPrice: 39800.0,
+          highPrice: 42000.0,
+          lowPrice: 38200.0,
+          accumulatedTradingVolume: 209434,
+          foreignRetentionRate: 7.33,
+        },
+        {
+          localDate: "20250702",
+          closePrice: 40900.0,
+          openPrice: 41550.0,
+          highPrice: 41850.0,
+          lowPrice: 40000.0,
+          accumulatedTradingVolume: 95103,
+          foreignRetentionRate: 7.08,
+        },
+        {
+          localDate: "20250703",
+          closePrice: 42000.0,
+          openPrice: 41300.0,
+          highPrice: 42000.0,
+          lowPrice: 40500.0,
+          accumulatedTradingVolume: 50219,
+          foreignRetentionRate: 7.09,
+        },
+        {
+          localDate: "20250704",
+          closePrice: 40900.0,
+          openPrice: 42150.0,
+          highPrice: 42150.0,
+          lowPrice: 40050.0,
+          accumulatedTradingVolume: 66830,
+          foreignRetentionRate: 6.87,
+        },
+        {
+          localDate: "20250707",
+          closePrice: 40950.0,
+          openPrice: 40500.0,
+          highPrice: 41900.0,
+          lowPrice: 40000.0,
+          accumulatedTradingVolume: 35668,
+          foreignRetentionRate: 6.88,
+        },
+        {
+          localDate: "20250708",
+          closePrice: 41650.0,
+          openPrice: 41100.0,
+          highPrice: 41950.0,
+          lowPrice: 39450.0,
+          accumulatedTradingVolume: 90548,
+          foreignRetentionRate: 6.96,
+        },
+        {
+          localDate: "20250709",
+          closePrice: 42050.0,
+          openPrice: 42150.0,
+          highPrice: 42650.0,
+          lowPrice: 41350.0,
+          accumulatedTradingVolume: 67182,
+          foreignRetentionRate: 6.84,
+        },
+        {
+          localDate: "20250710",
+          closePrice: 42450.0,
+          openPrice: 41850.0,
+          highPrice: 42500.0,
+          lowPrice: 41500.0,
+          accumulatedTradingVolume: 66321,
+          foreignRetentionRate: 6.91,
+        },
+        {
+          localDate: "20250711",
+          closePrice: 42450.0,
+          openPrice: 42450.0,
+          highPrice: 42750.0,
+          lowPrice: 42000.0,
+          accumulatedTradingVolume: 58548,
+          foreignRetentionRate: 6.92,
+        },
+        {
+          localDate: "20250714",
+          closePrice: 42250.0,
+          openPrice: 42450.0,
+          highPrice: 42900.0,
+          lowPrice: 42200.0,
+          accumulatedTradingVolume: 23005,
+          foreignRetentionRate: 6.89,
+        },
+        {
+          localDate: "20250715",
+          closePrice: 42450.0,
+          openPrice: 42000.0,
+          highPrice: 42450.0,
+          lowPrice: 41800.0,
+          accumulatedTradingVolume: 16760,
+          foreignRetentionRate: 6.89,
+        },
+        {
+          localDate: "20250716",
+          closePrice: 42450.0,
+          openPrice: 42400.0,
+          highPrice: 42750.0,
+          lowPrice: 41950.0,
+          accumulatedTradingVolume: 26153,
+          foreignRetentionRate: 6.85,
+        },
+        {
+          localDate: "20250717",
+          closePrice: 42350.0,
+          openPrice: 42500.0,
+          highPrice: 42550.0,
+          lowPrice: 41300.0,
+          accumulatedTradingVolume: 38763,
+          foreignRetentionRate: 6.78,
+        },
+        {
+          localDate: "20250718",
+          closePrice: 42850.0,
+          openPrice: 42250.0,
+          highPrice: 43050.0,
+          lowPrice: 41800.0,
+          accumulatedTradingVolume: 60705,
+          foreignRetentionRate: 6.95,
+        },
+        {
+          localDate: "20250721",
+          closePrice: 42950.0,
+          openPrice: 43200.0,
+          highPrice: 43400.0,
+          lowPrice: 42600.0,
+          accumulatedTradingVolume: 63986,
+          foreignRetentionRate: 6.91,
+        },
+        {
+          localDate: "20250722",
+          closePrice: 42850.0,
+          openPrice: 42850.0,
+          highPrice: 43000.0,
+          lowPrice: 42200.0,
+          accumulatedTradingVolume: 33279,
+          foreignRetentionRate: 6.84,
+        },
+        {
+          localDate: "20250723",
+          closePrice: 42550.0,
+          openPrice: 42850.0,
+          highPrice: 43350.0,
+          lowPrice: 41950.0,
+          accumulatedTradingVolume: 26109,
+          foreignRetentionRate: 6.8,
+        },
+        {
+          localDate: "20250724",
+          closePrice: 42600.0,
+          openPrice: 42750.0,
+          highPrice: 42900.0,
+          lowPrice: 42300.0,
+          accumulatedTradingVolume: 42860,
+          foreignRetentionRate: 6.85,
+        },
+        {
+          localDate: "20250725",
+          closePrice: 42550.0,
+          openPrice: 42600.0,
+          highPrice: 42700.0,
+          lowPrice: 42400.0,
+          accumulatedTradingVolume: 20389,
+          foreignRetentionRate: 6.85,
+        },
+        {
+          localDate: "20250728",
+          closePrice: 42400.0,
+          openPrice: 42650.0,
+          highPrice: 42650.0,
+          lowPrice: 40850.0,
+          accumulatedTradingVolume: 114448,
+          foreignRetentionRate: 6.72,
+        },
+        {
+          localDate: "20250729",
+          closePrice: 42300.0,
+          openPrice: 42600.0,
+          highPrice: 42600.0,
+          lowPrice: 41300.0,
+          accumulatedTradingVolume: 50607,
+          foreignRetentionRate: 6.63,
+        },
+        {
+          localDate: "20250730",
+          closePrice: 43300.0,
+          openPrice: 42250.0,
+          highPrice: 43450.0,
+          lowPrice: 42250.0,
+          accumulatedTradingVolume: 73433,
+          foreignRetentionRate: 6.88,
+        },
+        {
+          localDate: "20250731",
+          closePrice: 42750.0,
+          openPrice: 43500.0,
+          highPrice: 43500.0,
+          lowPrice: 42600.0,
+          accumulatedTradingVolume: 34949,
+          foreignRetentionRate: 6.83,
+        },
+        {
+          localDate: "20250801",
+          closePrice: 42200.0,
+          openPrice: 42000.0,
+          highPrice: 42750.0,
+          lowPrice: 41850.0,
+          accumulatedTradingVolume: 55785,
+          foreignRetentionRate: 6.76,
+        },
+        {
+          localDate: "20250804",
+          closePrice: 42250.0,
+          openPrice: 41550.0,
+          highPrice: 42400.0,
+          lowPrice: 40350.0,
+          accumulatedTradingVolume: 48644,
+          foreignRetentionRate: 6.61,
+        },
+        {
+          localDate: "20250805",
+          closePrice: 43100.0,
+          openPrice: 42050.0,
+          highPrice: 44050.0,
+          lowPrice: 41850.0,
+          accumulatedTradingVolume: 90948,
+          foreignRetentionRate: 6.64,
+        },
+        {
+          localDate: "20250806",
+          closePrice: 43050.0,
+          openPrice: 42800.0,
+          highPrice: 43150.0,
+          lowPrice: 42100.0,
+          accumulatedTradingVolume: 30739,
+          foreignRetentionRate: 6.58,
+        },
+        {
+          localDate: "20250807",
+          closePrice: 43300.0,
+          openPrice: 42900.0,
+          highPrice: 43500.0,
+          lowPrice: 42850.0,
+          accumulatedTradingVolume: 32522,
+          foreignRetentionRate: 6.63,
+        },
+        {
+          localDate: "20250808",
+          closePrice: 43350.0,
+          openPrice: 43200.0,
+          highPrice: 43800.0,
+          lowPrice: 43200.0,
+          accumulatedTradingVolume: 25083,
+          foreignRetentionRate: 6.84,
+        },
+        {
+          localDate: "20250811",
+          closePrice: 42900.0,
+          openPrice: 43950.0,
+          highPrice: 43950.0,
+          lowPrice: 42750.0,
+          accumulatedTradingVolume: 25649,
+          foreignRetentionRate: 6.77,
+        },
+        {
+          localDate: "20250812",
+          closePrice: 42700.0,
+          openPrice: 41900.0,
+          highPrice: 42900.0,
+          lowPrice: 41550.0,
+          accumulatedTradingVolume: 75749,
+          foreignRetentionRate: 6.58,
+        },
+        {
+          localDate: "20250813",
+          closePrice: 42650.0,
+          openPrice: 42050.0,
+          highPrice: 43000.0,
+          lowPrice: 42050.0,
+          accumulatedTradingVolume: 36608,
+          foreignRetentionRate: 6.62,
+        },
+        {
+          localDate: "20250814",
+          closePrice: 43150.0,
+          openPrice: 42500.0,
+          highPrice: 43700.0,
+          lowPrice: 42500.0,
+          accumulatedTradingVolume: 61445,
+          foreignRetentionRate: 6.74,
+        },
+        {
+          localDate: "20250818",
+          closePrice: 41100.0,
+          openPrice: 43400.0,
+          highPrice: 43650.0,
+          lowPrice: 40500.0,
+          accumulatedTradingVolume: 98075,
+          foreignRetentionRate: 6.39,
+        },
+        {
+          localDate: "20250819",
+          closePrice: 41000.0,
+          openPrice: 40550.0,
+          highPrice: 41250.0,
+          lowPrice: 40050.0,
+          accumulatedTradingVolume: 41443,
+          foreignRetentionRate: 6.37,
+        },
+        {
+          localDate: "20250820",
+          closePrice: 40950.0,
+          openPrice: 40300.0,
+          highPrice: 41000.0,
+          lowPrice: 40300.0,
+          accumulatedTradingVolume: 35943,
+          foreignRetentionRate: 6.4,
+        },
+        {
+          localDate: "20250821",
+          closePrice: 40950.0,
+          openPrice: 40800.0,
+          highPrice: 41450.0,
+          lowPrice: 40600.0,
+          accumulatedTradingVolume: 18171,
+          foreignRetentionRate: 6.36,
+        },
+        {
+          localDate: "20250822",
+          closePrice: 41200.0,
+          openPrice: 40700.0,
+          highPrice: 41700.0,
+          lowPrice: 40700.0,
+          accumulatedTradingVolume: 24534,
+          foreignRetentionRate: 6.35,
+        },
+        {
+          localDate: "20250825",
+          closePrice: 41550.0,
+          openPrice: 41150.0,
+          highPrice: 41750.0,
+          lowPrice: 41000.0,
+          accumulatedTradingVolume: 13009,
+          foreignRetentionRate: 6.39,
+        },
+        {
+          localDate: "20250826",
+          closePrice: 41400.0,
+          openPrice: 41550.0,
+          highPrice: 41600.0,
+          lowPrice: 39100.0,
+          accumulatedTradingVolume: 23658,
+          foreignRetentionRate: 6.41,
+        },
+        {
+          localDate: "20250827",
+          closePrice: 41400.0,
+          openPrice: 41400.0,
+          highPrice: 41800.0,
+          lowPrice: 41100.0,
+          accumulatedTradingVolume: 21636,
+          foreignRetentionRate: 6.41,
+        },
+        {
+          localDate: "20250828",
+          closePrice: 41350.0,
+          openPrice: 41150.0,
+          highPrice: 41500.0,
+          lowPrice: 41100.0,
+          accumulatedTradingVolume: 23934,
+          foreignRetentionRate: 6.44,
+        },
+        {
+          localDate: "20250829",
+          closePrice: 41150.0,
+          openPrice: 41100.0,
+          highPrice: 41450.0,
+          lowPrice: 40950.0,
+          accumulatedTradingVolume: 37064,
+          foreignRetentionRate: 6.38,
+        },
+        {
+          localDate: "20250901",
+          closePrice: 40050.0,
+          openPrice: 41000.0,
+          highPrice: 41150.0,
+          lowPrice: 39150.0,
+          accumulatedTradingVolume: 98028,
+          foreignRetentionRate: 6.17,
+        },
+        {
+          localDate: "20250902",
+          closePrice: 39950.0,
+          openPrice: 40200.0,
+          highPrice: 40400.0,
+          lowPrice: 37150.0,
+          accumulatedTradingVolume: 102839,
+          foreignRetentionRate: 6.04,
+        },
+        {
+          localDate: "20250903",
+          closePrice: 38550.0,
+          openPrice: 39150.0,
+          highPrice: 39550.0,
+          lowPrice: 38550.0,
+          accumulatedTradingVolume: 82768,
+          foreignRetentionRate: 6.08,
+        },
+        {
+          localDate: "20250904",
+          closePrice: 35650.0,
+          openPrice: 38250.0,
+          highPrice: 38250.0,
+          lowPrice: 35450.0,
+          accumulatedTradingVolume: 125176,
+          foreignRetentionRate: 5.95,
+        },
+        {
+          localDate: "20250905",
+          closePrice: 34950.0,
+          openPrice: 35750.0,
+          highPrice: 35750.0,
+          lowPrice: 34850.0,
+          accumulatedTradingVolume: 34030,
+          foreignRetentionRate: 5.95,
+        },
+      ];
+
+      let charts = {};
+
+      // 날짜 파싱 함수
+      function parseDate(dateStr) {
+        const year = dateStr.substring(0, 4);
+        const month = dateStr.substring(4, 6);
+        const day = dateStr.substring(6, 8);
+        return new Date(year, month - 1, day);
+      }
+
+      // 이동평균선 계산 함수
+      function calculateMovingAverage(data, period) {
+        const result = [];
+        for (let i = 0; i < data.length; i++) {
+          if (i < period - 1) {
+            result.push(null); // 데이터가 부족한 경우 null
+          } else {
+            let sum = 0;
+            for (let j = i - period + 1; j <= i; j++) {
+              sum += data[j].closePrice;
+            }
+            result.push({
+              x: parseDate(data[i].localDate),
+              y: sum / period,
+            });
+          }
+        }
+        return result.filter((item) => item !== null); // null 값 제거
+      }
+
+      // 일목균형표 계산 함수
+      function calculateIchimoku(data) {
+        const result = {
+          tenkanSen: [],
+          kijunSen: [],
+          chikouSpan: [],
+          senkouSpanA: [],
+          senkouSpanB: [],
+          cloudTop: [],
+          cloudBottom: [],
+        };
+
+        for (let i = 0; i < data.length; i++) {
+          const date = parseDate(data[i].localDate);
+
+          // 전환선 (Tenkan-sen): 9일간 최고가와 최저가의 평균
+          if (i >= 8) {
+            let high = Math.max(
+              ...data.slice(i - 8, i + 1).map((d) => d.highPrice)
+            );
+            let low = Math.min(
+              ...data.slice(i - 8, i + 1).map((d) => d.lowPrice)
+            );
+            result.tenkanSen.push({ x: date, y: (high + low) / 2 });
+          } else {
+            result.tenkanSen.push({ x: date, y: null });
+          }
+
+          // 기준선 (Kijun-sen): 26일간 최고가와 최저가의 평균
+          if (i >= 25) {
+            let high = Math.max(
+              ...data.slice(i - 25, i + 1).map((d) => d.highPrice)
+            );
+            let low = Math.min(
+              ...data.slice(i - 25, i + 1).map((d) => d.lowPrice)
+            );
+            result.kijunSen.push({ x: date, y: (high + low) / 2 });
+          } else {
+            result.kijunSen.push({ x: date, y: null });
+          }
+
+          // 후행스팬 (Chikou Span): 26일 전 종가
+          if (i >= 25) {
+            result.chikouSpan.push({ x: date, y: data[i - 25].closePrice });
+          } else {
+            result.chikouSpan.push({ x: date, y: null });
+          }
+
+          // 선행스팬 A (Senkou Span A): (전환선 + 기준선) / 2를 26일 앞으로
+          if (i >= 25) {
+            let tenkan = result.tenkanSen[i].y;
+            let kijun = result.kijunSen[i].y;
+            if (tenkan !== null && kijun !== null) {
+              result.senkouSpanA.push({ x: date, y: (tenkan + kijun) / 2 });
+            } else {
+              result.senkouSpanA.push({ x: date, y: null });
+            }
+          } else {
+            result.senkouSpanA.push({ x: date, y: null });
+          }
+
+          // 선행스팬 B (Senkou Span B): 52일간 최고가와 최저가 평균을 26일 앞으로
+          if (i >= 51) {
+            let high = Math.max(
+              ...data.slice(i - 51, i + 1).map((d) => d.highPrice)
+            );
+            let low = Math.min(
+              ...data.slice(i - 51, i + 1).map((d) => d.lowPrice)
+            );
+            result.senkouSpanB.push({ x: date, y: (high + low) / 2 });
+          } else {
+            result.senkouSpanB.push({ x: date, y: null });
+          }
+        }
+
+        // 구름대 (Cloud) 상단과 하단 계산
+        for (let i = 0; i < result.senkouSpanA.length; i++) {
+          const spanA = result.senkouSpanA[i].y;
+          const spanB = result.senkouSpanB[i].y;
+
+          if (spanA !== null && spanB !== null) {
+            result.cloudTop.push({
+              x: result.senkouSpanA[i].x,
+              y: Math.max(spanA, spanB),
+            });
+            result.cloudBottom.push({
+              x: result.senkouSpanA[i].x,
+              y: Math.min(spanA, spanB),
+            });
+          } else {
+            result.cloudTop.push({
+              x: result.senkouSpanA[i].x,
+              y: null,
+            });
+            result.cloudBottom.push({
+              x: result.senkouSpanA[i].x,
+              y: null,
+            });
+          }
+        }
+
+        // null 값 제거
+        Object.keys(result).forEach((key) => {
+          result[key] = result[key].filter((item) => item.y !== null);
+        });
+
+        return result;
+      }
+
+      // MACD 계산 함수 (키움증권 기준)
+      function calculateMACD(data, short = 12, long = 26, signal = 9) {
+        // EMA 계산 함수
+        function calculateEMA(values, period) {
+          const ema = [];
+          const multiplier = 2 / (period + 1);
+
+          // 첫 번째 EMA는 SMA로 시작
+          let sum = 0;
+          for (let i = 0; i < period && i < values.length; i++) {
+            sum += values[i];
+          }
+          ema[period - 1] = sum / period;
+
+          // 나머지 EMA 계산
+          for (let i = period; i < values.length; i++) {
+            ema[i] = values[i] * multiplier + ema[i - 1] * (1 - multiplier);
+          }
+
+          return ema;
+        }
+
+        const prices = data.map((d) => d.closePrice);
+
+        // 12일 EMA와 26일 EMA 계산
+        const ema12 = calculateEMA(prices, short);
+        const ema26 = calculateEMA(prices, long);
+
+        // MACD 라인 계산 (EMA12 - EMA26)
+        const macdLine = [];
+        for (let i = long - 1; i < data.length; i++) {
+          if (ema12[i] !== undefined && ema26[i] !== undefined) {
+            macdLine.push(ema12[i] - ema26[i]);
+          }
+        }
+
+        // Signal 라인 계산 (MACD의 9일 EMA)
+        const signalLine = calculateEMA(macdLine, signal);
+
+        // Histogram 계산 (MACD - Signal)
+        const histogram = [];
+        for (let i = 0; i < macdLine.length; i++) {
+          if (signalLine[i] !== undefined) {
+            histogram.push(macdLine[i] - signalLine[i]);
+          }
+        }
+
+        // 결과를 Chart.js 형식으로 변환
+        const result = {
+          macd: [],
+          signal: [],
+          histogram: [],
+        };
+
+        // MACD 데이터 포인트 생성
+        for (let i = 0; i < macdLine.length; i++) {
+          const dataIndex = i + long - 1;
+          if (dataIndex < data.length) {
+            const date = parseDate(data[dataIndex].localDate);
+
+            result.macd.push({
+              x: date,
+              y: macdLine[i],
+            });
+
+            if (signalLine[i] !== undefined) {
+              result.signal.push({
+                x: date,
+                y: signalLine[i],
+              });
+
+              result.histogram.push({
+                x: date,
+                y: histogram[i - signal + 1] || 0,
+              });
+            }
+          }
+        }
+
+        return result;
+      }
+
+      // RCI 계산 함수 (키움증권 기준 - 완전 재구현)
+      function calculateRCI(data) {
+        const prices = data.map((d) => d.closePrice);
+
+        // 표준 RCI 계산 함수 (Spearman 순위 상관계수 기반)
+        function calculateStandardRCI(prices, period, currentIndex) {
+          if (currentIndex < period - 1) return null;
+
+          // 해당 기간의 가격 데이터와 날짜 순위 추출
+          const periodPrices = [];
+          for (let i = 0; i < period; i++) {
+            periodPrices.push({
+              price: prices[currentIndex - i],
+              dateRank: i + 1, // 1이 최신, period가 가장 오래된 것
+            });
+          }
+
+          // 가격 순위 계산 (큰 가격부터 1위)
+          periodPrices.sort((a, b) => b.price - a.price);
+          for (let i = 0; i < periodPrices.length; i++) {
+            periodPrices[i].priceRank = i + 1;
+          }
+
+          // 원래 순서로 복원
+          periodPrices.sort((a, b) => a.dateRank - b.dateRank);
+
+          // Spearman 순위 상관계수 계산
+          let sumD2 = 0;
+          for (let i = 0; i < period; i++) {
+            const d = periodPrices[i].dateRank - periodPrices[i].priceRank;
+            sumD2 += d * d;
+          }
+
+          const n = period;
+          const rci = (1 - (6 * sumD2) / (n * (n * n - 1))) * 100;
+          return rci;
+        }
+
+        // 결과 배열 생성
+        const result = {
+          rci9: [],
+          rci13: [],
+          rci18: [],
+          rci26: [],
+        };
+
+        // 각 데이터 포인트에 대해 RCI 계산
+        for (let i = 0; i < data.length; i++) {
+          const date = parseDate(data[i].localDate);
+
+          const rci9 = calculateStandardRCI(prices, 9, i);
+          const rci13 = calculateStandardRCI(prices, 13, i);
+          const rci18 = calculateStandardRCI(prices, 18, i);
+          const rci26 = calculateStandardRCI(prices, 26, i);
+
+          if (rci9 !== null) {
+            result.rci9.push({ x: date, y: rci9 });
+          }
+          if (rci13 !== null) {
+            result.rci13.push({ x: date, y: rci13 });
+          }
+          if (rci18 !== null) {
+            result.rci18.push({ x: date, y: rci18 });
+          }
+          if (rci26 !== null) {
+            result.rci26.push({ x: date, y: rci26 });
+          }
+        }
+
+        return result;
+      }
+
+      // 통계 초기화
+      function initializeStats() {
+        const latest = stockData[stockData.length - 1];
+        const oldest = stockData[0];
+        const prices = stockData.map((d) => d.closePrice);
+        const volumes = stockData.map((d) => d.accumulatedTradingVolume);
+
+        const maxPrice = Math.max(...prices);
+        const minPrice = Math.min(...prices);
+        const avgVolume = volumes.reduce((a, b) => a + b, 0) / volumes.length;
+        const priceChange = latest.closePrice - oldest.closePrice;
+        const priceChangePercent = (
+          (priceChange / oldest.closePrice) *
+          100
+        ).toFixed(2);
+
+        const statsHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">현재가</div>
+                    <div class="stat-value" style="color: ${
+                      latest.closePrice >= oldest.closePrice
+                        ? "#27ae60"
+                        : "#e74c3c"
+                    }">
+                        ${latest.closePrice.toLocaleString()}원
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">기간 등락률</div>
+                    <div class="stat-value" style="color: ${
+                      priceChange >= 0 ? "#27ae60" : "#e74c3c"
+                    }">
+                        ${priceChange >= 0 ? "+" : ""}${priceChangePercent}%
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">최고가</div>
+                    <div class="stat-value">${maxPrice.toLocaleString()}원</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">최저가</div>
+                    <div class="stat-value">${minPrice.toLocaleString()}원</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">평균 거래량</div>
+                    <div class="stat-value">${Math.round(
+                      avgVolume
+                    ).toLocaleString()}주</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">외국인 보유율</div>
+                    <div class="stat-value">${
+                      latest.foreignRetentionRate
+                    }%</div>
+                </div>
+            `;
+
+        document.getElementById("statsGrid").innerHTML = statsHTML;
+      }
+
+      // 빗금 패턴 생성 함수
+      function createHatchPattern(ctx, color, direction = "right") {
+        const patternCanvas = document.createElement("canvas");
+        const patternContext = patternCanvas.getContext("2d");
+
+        patternCanvas.width = 10;
+        patternCanvas.height = 10;
+
+        patternContext.strokeStyle = color;
+        patternContext.lineWidth = 1;
+        patternContext.globalAlpha = 0.6;
+
+        if (direction === "right") {
+          // 우상향 빗금 (/)
+          patternContext.beginPath();
+          patternContext.moveTo(0, 10);
+          patternContext.lineTo(10, 0);
+          patternContext.stroke();
+
+          patternContext.beginPath();
+          patternContext.moveTo(-2, 12);
+          patternContext.lineTo(8, 2);
+          patternContext.stroke();
+
+          patternContext.beginPath();
+          patternContext.moveTo(2, -2);
+          patternContext.lineTo(12, 8);
+          patternContext.stroke();
+        } else {
+          // 좌상향 빗금 (\)
+          patternContext.beginPath();
+          patternContext.moveTo(0, 0);
+          patternContext.lineTo(10, 10);
+          patternContext.stroke();
+
+          patternContext.beginPath();
+          patternContext.moveTo(-2, -2);
+          patternContext.lineTo(8, 8);
+          patternContext.stroke();
+
+          patternContext.beginPath();
+          patternContext.moveTo(2, 2);
+          patternContext.lineTo(12, 12);
+          patternContext.stroke();
+        }
+
+        return ctx.createPattern(patternCanvas, "repeat");
+      }
+
+      // 주가 차트 생성
+      function createPriceChart() {
+        const ctx = document
+          .getElementById("candlestickChart")
+          .getContext("2d");
+
+        // 빗금 패턴 생성
+        const orangeHatchPattern = createHatchPattern(ctx, "#e67e22", "right");
+        const skyBlueHatchPattern = createHatchPattern(ctx, "#3498db", "left");
+
+        // 이동평균선 데이터 계산
+        const ma5 = calculateMovingAverage(stockData, 5);
+        const ma20 = calculateMovingAverage(stockData, 20);
+        const ma60 = calculateMovingAverage(stockData, 60);
+
+        // 일목균형표 데이터 계산
+        const ichimoku = calculateIchimoku(stockData);
+
+        charts.price = new Chart(ctx, {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: "종가",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.closePrice,
+                })),
+                borderColor: "#2c3e50",
+                backgroundColor: "rgba(44, 62, 80, 0.1)",
+                fill: false,
+                tension: 0.1,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+                borderWidth: 2,
+                order: 1,
+              },
+              {
+                label: "5일 이평선",
+                data: ma5,
+                borderColor: "#e74c3c",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+                borderWidth: 2,
+                order: 2,
+              },
+              {
+                label: "20일 이평선",
+                data: ma20,
+                borderColor: "#f39c12",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+                borderWidth: 2,
+                order: 3,
+              },
+              {
+                label: "60일 이평선",
+                data: ma60,
+                borderColor: "#9b59b6",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+                borderWidth: 2,
+                order: 4,
+              },
+              {
+                label: "고가",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.highPrice,
+                })),
+                borderColor: "rgba(231, 76, 60, 0.5)",
+                backgroundColor: "transparent",
+                borderDash: [3, 3],
+                pointRadius: 0,
+                pointHoverRadius: 2,
+                borderWidth: 1,
+                order: 5,
+              },
+              {
+                label: "저가",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.lowPrice,
+                })),
+                borderColor: "rgba(39, 174, 96, 0.5)",
+                backgroundColor: "transparent",
+                borderDash: [3, 3],
+                pointRadius: 0,
+                pointHoverRadius: 2,
+                borderWidth: 1,
+                order: 6,
+              },
+              // 일목균형표 구성요소들
+              {
+                label: "전환선 (9일)",
+                data: ichimoku.tenkanSen,
+                borderColor: "#1abc9c",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+                borderWidth: 1.5,
+                order: 7,
+              },
+              {
+                label: "기준선 (26일)",
+                data: ichimoku.kijunSen,
+                borderColor: "#e67e22",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+                borderWidth: 1.5,
+                order: 8,
+              },
+              {
+                label: "후행스팬",
+                data: ichimoku.chikouSpan,
+                borderColor: "#8e44ad",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+                borderWidth: 1.5,
+                borderDash: [2, 2],
+                order: 9,
+              },
+              {
+                label: "구름대 상단",
+                data: ichimoku.cloudTop,
+                borderColor: "rgba(230, 126, 34, 0.8)",
+                backgroundColor: orangeHatchPattern,
+                fill: "+1", // 다음 dataset과 채우기
+                tension: 0.2,
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderWidth: 1,
+                order: 10,
+              },
+              {
+                label: "구름대 하단",
+                data: ichimoku.cloudBottom,
+                borderColor: "rgba(52, 152, 219, 0.8)",
+                backgroundColor: skyBlueHatchPattern,
+                fill: false,
+                tension: 0.2,
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderWidth: 1,
+                order: 11,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: "index",
+            },
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  displayFormats: {
+                    day: "MM/dd",
+                    week: "MM/dd",
+                    month: "yy/MM",
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "날짜",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "가격 (원)",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value.toLocaleString() + "원";
+                  },
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return (
+                      context.dataset.label +
+                      ": " +
+                      context.parsed.y.toLocaleString() +
+                      "원"
+                    );
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // 거래량 차트 생성
+      function createVolumeChart() {
+        const ctx = document
+          .getElementById("volumeChartCanvas")
+          .getContext("2d");
+
+        charts.volume = new Chart(ctx, {
+          type: "bar",
+          data: {
+            datasets: [
+              {
+                label: "거래량",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.accumulatedTradingVolume,
+                })),
+                backgroundColor: stockData.map((item, index) => {
+                  if (index === 0) return "#3498db";
+                  const prevClose = stockData[index - 1].closePrice;
+                  return item.closePrice >= prevClose ? "#27ae60" : "#e74c3c";
+                }),
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  displayFormats: {
+                    day: "MM/dd",
+                    week: "MM/dd",
+                    month: "yy/MM",
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "날짜",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "거래량 (주)",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value.toLocaleString() + "주";
+                  },
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return (
+                      "거래량: " + context.parsed.y.toLocaleString() + "주"
+                    );
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // MACD 차트 생성
+      function createMACDChart() {
+        const ctx = document.getElementById("macdChartCanvas").getContext("2d");
+
+        // MACD 데이터 계산
+        const macdData = calculateMACD(stockData);
+
+        charts.macd = new Chart(ctx, {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: "MACD",
+                data: macdData.macd,
+                borderColor: "#2980b9",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                borderWidth: 2,
+                order: 1,
+              },
+              {
+                label: "Signal",
+                data: macdData.signal,
+                borderColor: "#e74c3c",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                borderWidth: 2,
+                order: 2,
+              },
+              {
+                label: "Histogram",
+                data: macdData.histogram,
+                backgroundColor: macdData.histogram.map(
+                  (point) =>
+                    point.y >= 0
+                      ? "rgba(255, 165, 0, 0.7)" // 오렌지색 (양수)
+                      : "rgba(135, 206, 250, 0.7)" // 하늘색 (음수)
+                ),
+                borderColor: macdData.histogram.map(
+                  (point) => (point.y >= 0 ? "#FF8C00" : "#87CEEB") // 진한 오렌지, 진한 하늘색
+                ),
+                borderWidth: 1,
+                type: "bar",
+                order: 3,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  displayFormats: {
+                    day: "MM/dd",
+                    week: "MM/dd",
+                    month: "yy/MM",
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "날짜",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "MACD 값",
+                },
+                grid: {
+                  color: function (context) {
+                    if (context.tick.value === 0) {
+                      return "#666666";
+                    }
+                    return "rgba(200, 200, 200, 0.3)";
+                  },
+                  lineWidth: function (context) {
+                    if (context.tick.value === 0) {
+                      return 2;
+                    }
+                    return 1;
+                  },
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const label = context.dataset.label;
+                    const value = context.parsed.y.toFixed(4);
+                    return `${label}: ${value}`;
+                  },
+                },
+              },
+            },
+            interaction: {
+              intersect: false,
+              mode: "index",
+            },
+          },
+        });
+      }
+
+      // RCI 차트 생성
+      function createRCIChart() {
+        const ctx = document.getElementById("rciChartCanvas").getContext("2d");
+
+        // RCI 데이터 계산
+        const rciData = calculateRCI(stockData);
+
+        charts.rci = new Chart(ctx, {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: "RCI9",
+                data: rciData.rci9,
+                borderColor: "#e74c3c",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                borderWidth: 2,
+                order: 1,
+              },
+              {
+                label: "RCI13",
+                data: rciData.rci13,
+                borderColor: "#f39c12",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                borderWidth: 2,
+                order: 2,
+              },
+              {
+                label: "RCI18",
+                data: rciData.rci18,
+                borderColor: "#3498db",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                borderWidth: 2,
+                order: 3,
+              },
+              {
+                label: "RCI26",
+                data: rciData.rci26,
+                borderColor: "#9b59b6",
+                backgroundColor: "transparent",
+                fill: false,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                borderWidth: 2,
+                order: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  displayFormats: {
+                    day: "MM/dd",
+                    week: "MM/dd",
+                    month: "yy/MM",
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "날짜",
+                },
+              },
+              y: {
+                min: -100,
+                max: 100,
+                title: {
+                  display: true,
+                  text: "RCI 값 (%)",
+                },
+                grid: {
+                  color: function (context) {
+                    if (context.tick.value === 0) {
+                      return "#666666";
+                    } else if (
+                      context.tick.value === 80 ||
+                      context.tick.value === -80
+                    ) {
+                      return "#d35400";
+                    } else if (
+                      context.tick.value === 50 ||
+                      context.tick.value === -50
+                    ) {
+                      return "#e67e22";
+                    }
+                    return "rgba(200, 200, 200, 0.3)";
+                  },
+                  lineWidth: function (context) {
+                    if (context.tick.value === 0) {
+                      return 2;
+                    } else if (
+                      context.tick.value === 80 ||
+                      context.tick.value === -80
+                    ) {
+                      return 1.5;
+                    }
+                    return 1;
+                  },
+                },
+                ticks: {
+                  stepSize: 20,
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const label = context.dataset.label;
+                    const value = context.parsed.y.toFixed(2);
+                    return `${label}: ${value}%`;
+                  },
+                },
+              },
+              annotation: {
+                annotations: {
+                  line80: {
+                    type: "line",
+                    yMin: 80,
+                    yMax: 80,
+                    borderColor: "#d35400",
+                    borderWidth: 1,
+                    borderDash: [5, 5],
+                  },
+                  lineMinus80: {
+                    type: "line",
+                    yMin: -80,
+                    yMax: -80,
+                    borderColor: "#d35400",
+                    borderWidth: 1,
+                    borderDash: [5, 5],
+                  },
+                  line50: {
+                    type: "line",
+                    yMin: 50,
+                    yMax: 50,
+                    borderColor: "#e67e22",
+                    borderWidth: 1,
+                    borderDash: [3, 3],
+                  },
+                  lineMinus50: {
+                    type: "line",
+                    yMin: -50,
+                    yMax: -50,
+                    borderColor: "#e67e22",
+                    borderWidth: 1,
+                    borderDash: [3, 3],
+                  },
+                },
+              },
+            },
+            interaction: {
+              intersect: false,
+              mode: "index",
+            },
+          },
+        });
+      }
+
+      // 외국인 보유율 차트 생성
+      function createForeignChart() {
+        const ctx = document
+          .getElementById("foreignChartCanvas")
+          .getContext("2d");
+
+        charts.foreign = new Chart(ctx, {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: "외국인 보유율",
+                data: stockData.map((item) => ({
+                  x: parseDate(item.localDate),
+                  y: item.foreignRetentionRate,
+                })),
+                borderColor: "#9b59b6",
+                backgroundColor: "rgba(155, 89, 182, 0.1)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  displayFormats: {
+                    day: "MM/dd",
+                    week: "MM/dd",
+                    month: "yy/MM",
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "날짜",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "보유율 (%)",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value + "%";
+                  },
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return "외국인 보유율: " + context.parsed.y + "%";
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // 차트 표시 함수
+      function showChart(type) {
+        document
+          .querySelectorAll(".btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        event.target.classList.add("active");
+
+        document.querySelectorAll(".chart-section").forEach((section) => {
+          section.style.display = "none";
+        });
+
+        if (type === "price") {
+          document.getElementById("priceChart").style.display = "block";
+        } else if (type === "volume") {
+          document.getElementById("volumeChart").style.display = "block";
+        } else if (type === "macd") {
+          document.getElementById("macdChart").style.display = "block";
+        } else if (type === "rci") {
+          document.getElementById("rciChart").style.display = "block";
+        } else if (type === "foreign") {
+          document.getElementById("foreignChart").style.display = "block";
+        } else if (type === "all") {
+          document.querySelectorAll(".chart-section").forEach((section) => {
+            section.style.display = "block";
+          });
+        }
+
+        setTimeout(() => {
+          Object.values(charts).forEach((chart) => {
+            if (chart) chart.resize();
+          });
+        }, 100);
+      }
+
+      // 초기화
+      window.addEventListener("load", function () {
+        console.log("📊 DI 주식 대시보드 초기화 중...");
+        console.log(`✅ 전체 ${stockData.length}개 데이터 포인트 로드 완료`);
+        initializeStats();
+        createPriceChart();
+        createVolumeChart();
+        createMACDChart();
+        createRCIChart();
+        createForeignChart();
+        console.log("🎉 대시보드 로드 완료!");
+      });
+    </script>
+  </body>
+</html>
