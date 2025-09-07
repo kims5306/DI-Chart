@@ -371,20 +371,25 @@
         >
           실시간 주식 데이터 시각화 대시보드
         </p>
-        <button id="updateBtn" onclick="updateData()" style="
-          background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-          color: white;
-          border: none;
-          padding: 12px 25px;
-          border-radius: 25px;
-          font-size: 1em;
-          font-weight: bold;
-          cursor: pointer;
-          margin: 15px 10px 0 0;
-          box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-          transition: all 0.3s ease;
-        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(52, 152, 219, 0.4)'" 
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(52, 152, 219, 0.3)'">
+        <button
+          id="updateBtn"
+          onclick="updateData()"
+          style="
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 15px 10px 0 0;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+          "
+          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(52, 152, 219, 0.4)'"
+          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(52, 152, 219, 0.3)'"
+        >
           🔄 데이터 업데이트
         </button>
         <div class="badge">
@@ -495,59 +500,64 @@
       // 실시간 데이터 로딩 함수
       async function loadStockData() {
         try {
-          const response = await fetch('/api/stock-data');
+          const response = await fetch("/api/stock-data");
           const result = await response.json();
-          
+
           if (result.data && result.data.priceInfos) {
             stockData = result.data.priceInfos;
             lastUpdateTime = result.last_update;
-            console.log(`✅ 실시간 데이터 로드 완료: ${stockData.length}개 데이터 포인트`);
+            console.log(
+              `✅ 실시간 데이터 로드 완료: ${stockData.length}개 데이터 포인트`
+            );
             console.log(`📅 마지막 업데이트: ${lastUpdateTime}`);
             return true;
           } else {
-            console.error('❌ 데이터 형식이 올바르지 않습니다.');
+            console.error("❌ 데이터 형식이 올바르지 않습니다.");
             return false;
           }
         } catch (error) {
-          console.error('❌ 데이터 로드 실패:', error);
+          console.error("❌ 데이터 로드 실패:", error);
           return false;
         }
       }
 
       // 수동 업데이트 함수
       async function updateData() {
-        const updateBtn = document.getElementById('updateBtn');
+        const updateBtn = document.getElementById("updateBtn");
         if (updateBtn) {
-          updateBtn.textContent = '🔄 업데이트 중...';
+          updateBtn.textContent = "🔄 업데이트 중...";
           updateBtn.disabled = true;
         }
 
         try {
-          const response = await fetch('/api/update');
+          const response = await fetch("/api/update");
           const result = await response.json();
-          
+
           if (result.success) {
             await loadStockData();
             initializeStats();
             updateCharts();
-            showNotification('✅ 데이터가 성공적으로 업데이트되었습니다!', 'success');
+            showNotification(
+              "✅ 데이터가 성공적으로 업데이트되었습니다!",
+              "success"
+            );
           } else {
-            showNotification('❌ 데이터 업데이트에 실패했습니다.', 'error');
+            showNotification("❌ 데이터 업데이트에 실패했습니다.", "error");
           }
         } catch (error) {
-          console.error('업데이트 오류:', error);
-          showNotification('❌ 업데이트 중 오류가 발생했습니다.', 'error');
+          console.error("업데이트 오류:", error);
+          showNotification("❌ 업데이트 중 오류가 발생했습니다.", "error");
         } finally {
           if (updateBtn) {
-            updateBtn.textContent = '🔄 데이터 업데이트';
+            updateBtn.textContent = "🔄 데이터 업데이트";
             updateBtn.disabled = false;
           }
         }
       }
 
       // 알림 표시 함수
-      function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
+      function showNotification(message, type = "info") {
+        const notification = document.createElement("div");
         notification.style.cssText = `
           position: fixed;
           top: 20px;
@@ -558,11 +568,17 @@
           font-weight: bold;
           z-index: 1000;
           animation: slideIn 0.3s ease-out;
-          background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
+          background: ${
+            type === "success"
+              ? "#27ae60"
+              : type === "error"
+              ? "#e74c3c"
+              : "#3498db"
+          };
         `;
         notification.textContent = message;
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
           notification.remove();
         }, 3000);
@@ -585,7 +601,7 @@
         if (charts.foreign) {
           charts.foreign.destroy();
         }
-        
+
         createPriceChart();
         createVolumeChart();
         createMACDChart();
@@ -3207,15 +3223,15 @@
       // 초기화
       window.addEventListener("load", async function () {
         console.log("📊 DI 주식 대시보드 초기화 중...");
-        
+
         // 실시간 데이터 로드 시도
         const dataLoaded = await loadStockData();
-        
+
         if (!dataLoaded || stockData.length === 0) {
           console.log("⚠️ 실시간 데이터 로드 실패, 백업 데이터 사용");
           stockData = backupData;
         }
-        
+
         console.log(`✅ 전체 ${stockData.length}개 데이터 포인트 로드 완료`);
         initializeStats();
         createPriceChart();
