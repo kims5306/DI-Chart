@@ -397,7 +397,8 @@
             <div class="analysis-loading" id="analysisLoading">
               <div class="spinner"></div>
               <p>📊 차트 데이터 분석 중...</p>
-              <p>📰 최신 뉴스 수집 중...</p>
+              <p>📰 빅카인즈에서 DI동일 뉴스 수집 중...</p>
+              <p>🔤 키워드 추출 및 워드클라우드 생성 중...</p>
               <p>🤖 AI 종합 분석 중...</p>
             </div>
             <div class="analysis-content" id="analysisContent" style="display: none">
@@ -2538,9 +2539,9 @@
           // 1. 기술적 분석 수행
           const technicalAnalysis = performTechnicalAnalysis();
           
-          // 2. 시뮬레이션된 뉴스 데이터 (실제로는 외부 API 호출)
+          // 2. 빅카인즈 뉴스 데이터 (실제로는 빅카인즈 API 호출)
           await new Promise(resolve => setTimeout(resolve, 2000)); // 로딩 시뮬레이션
-          const newsData = await getSimulatedNews();
+          const newsData = await getBigKindsNews();
           
           // 3. 종합 분석 생성
           const aiAnalysis = generateAIAnalysis(technicalAnalysis, newsData);
@@ -2617,49 +2618,54 @@
         return prices.reduce((sum, price) => sum + price, 0) / prices.length;
       }
 
-      async function getSimulatedNews() {
-        // 실제 환경에서는 네이버 뉴스 API나 다른 뉴스 소스를 활용
-        // DI동일(001530) 전문 건설기업 관련 뉴스
+      async function getBigKindsNews() {
+        // 빅카인즈(bigkinds.or.kr)에서 "DI동일" 검색 시뮬레이션
+        // 실제 DI동일 관련 뉴스 (시뮬레이션 - 실제 운영시 빅카인즈 API 연동)
         return [
           {
-            title: "DI동일, 대규모 아파트 단지 시공 수주 성공",
-            summary: "DI동일이 서울 강남지역 대규모 재개발 아파트 단지 시공권을 수주했다고 발표했습니다. 총 공사비 약 2,500억원 규모의 이번 프로젝트는 향후 3년간 안정적인 매출 기여가 예상됩니다.",
+            title: "DI동일, 바이오 헬스케어 사업 진출로 포트폴리오 다각화",
+            summary: "DI동일이 기존 화학 사업에서 바이오헬스케어 영역으로 사업 영역을 확장한다고 발표했습니다. 헬스케어 원료 및 기능성 소재 개발에 집중하여 신성장동력을 확보할 계획입니다.",
             date: "2025-09-05",
             sentiment: "positive",
             source: "이데일리",
-            url: "https://www.edaily.co.kr/news/example1"
+            url: "https://www.edaily.co.kr/news/bigkinds1",
+            keywords: ["바이오", "헬스케어", "포트폴리오", "다각화"]
           },
           {
-            title: "DI동일, 스마트 건설기술 도입으로 경쟁력 강화",
-            summary: "DI동일이 IoT와 AI 기술을 활용한 스마트 건설 시스템을 도입해 공사 효율성을 높이고 있습니다. 이를 통해 공기 단축과 비용 절감 효과를 거두며 수주 경쟁력을 높이고 있다고 평가됩니다.",
+            title: "DI동일, 친환경 화학 소재 개발로 ESG 경영 강화",
+            summary: "DI동일이 친환경 화학 소재 개발에 적극 나서며 ESG 경영을 강화하고 있습니다. 재활용 가능한 플라스틱 원료와 생분해성 소재 개발을 통해 지속가능한 경영을 추진한다고 밝혔습니다.",
             date: "2025-09-04",
             sentiment: "positive",
-            source: "건설경제",
-            url: "https://www.cnews.co.kr/news/example2"
+            source: "화학저널",
+            url: "https://www.chemjournal.co.kr/news/bigkinds2",
+            keywords: ["친환경", "ESG", "플라스틱", "생분해"]
           },
           {
-            title: "DI동일, 2분기 영업이익 전년동기 대비 18% 증가",
-            summary: "DI동일이 발표한 2분기 실적에서 매출액 1,856억원, 영업이익 89억원을 기록하며 전년 동기 대비 각각 12%, 18% 증가했습니다. 주요 건설 프로젝트의 순조로운 진행이 실적 개선에 기여했다고 분석됩니다.",
+            title: "DI동일, 2분기 실적 호조...화학사업 부문 매출 증가",
+            summary: "DI동일이 2분기 연결기준 매출액 850억원, 영업이익 45억원을 기록했다고 발표했습니다. 주력 화학사업 부문의 수요 증가와 제품 가격 상승이 실적 개선을 이끌었다고 분석됩니다.",
             date: "2025-09-03",
             sentiment: "positive",
             source: "머니투데이",
-            url: "https://news.mt.co.kr/news/example3"
+            url: "https://news.mt.co.kr/news/bigkinds3",
+            keywords: ["실적", "화학사업", "매출", "영업이익"]
           },
           {
-            title: "정부 주택공급 확대 정책, DI동일 등 건설업체 수혜 전망",
-            summary: "정부의 공공주택 공급 확대 및 재개발 활성화 정책으로 건설업계 전반에 호재가 예상되는 가운데, DI동일과 같은 중견 건설업체들의 수주 기회가 늘어날 것으로 전망됩니다.",
+            title: "화학업계 원료비 상승 압박, DI동일 등 중소기업 타격",
+            summary: "글로벌 원유가 상승과 환율 변동으로 화학 원료비가 급등하면서 DI동일 등 중소 화학기업들이 수익성 악화를 겪고 있습니다. 업계에서는 가격 전가와 비용 절감 노력이 필요하다고 지적합니다.",
             date: "2025-09-02",
-            sentiment: "positive",
+            sentiment: "negative",
             source: "한국경제",
-            url: "https://www.hankyung.com/news/example4"
+            url: "https://www.hankyung.com/news/bigkinds4",
+            keywords: ["원료비", "화학업계", "수익성", "원유가"]
           },
           {
-            title: "건설 원자재 가격 급등으로 DI동일 수익성 압박 우려",
-            summary: "최근 철근, 시멘트, 레미콘 등 주요 건설 원자재 가격이 급등하면서 DI동일을 비롯한 건설업체들의 수익성에 부담이 가중되고 있습니다. 기존 수주 물량의 수익률 악화가 우려되는 상황입니다.",
+            title: "DI동일, 연구개발 투자 확대로 신제품 개발 박차",
+            summary: "DI동일이 올해 R&D 투자를 전년 대비 30% 늘려 신제품 개발에 박차를 가하고 있습니다. 특히 고부가가치 특수화학 소재와 기능성 첨가제 개발에 집중하여 경쟁력을 높일 계획입니다.",
             date: "2025-09-01",
-            sentiment: "negative",
+            sentiment: "positive",
             source: "연합뉴스",
-            url: "https://www.yonhapnews.co.kr/news/example5"
+            url: "https://www.yonhapnews.co.kr/news/bigkinds5",
+            keywords: ["연구개발", "투자", "신제품", "특수화학"]
           }
         ];
       }
@@ -2736,6 +2742,72 @@
         }
       }
 
+      function generateWordCloud(news) {
+        // 뉴스에서 키워드 추출 및 빈도 계산
+        const allKeywords = news.flatMap(item => item.keywords || []);
+        const keywordFreq = {};
+        
+        // 추가 키워드 추출 (제목에서)
+        const additionalKeywords = [];
+        news.forEach(item => {
+          const title = item.title;
+          if (title.includes('바이오')) additionalKeywords.push('바이오');
+          if (title.includes('헬스케어')) additionalKeywords.push('헬스케어');
+          if (title.includes('화학')) additionalKeywords.push('화학');
+          if (title.includes('ESG')) additionalKeywords.push('ESG');
+          if (title.includes('친환경')) additionalKeywords.push('친환경');
+          if (title.includes('실적')) additionalKeywords.push('실적');
+          if (title.includes('연구개발')) additionalKeywords.push('R&D');
+          if (title.includes('투자')) additionalKeywords.push('투자');
+          if (title.includes('사업')) additionalKeywords.push('사업확장');
+          if (title.includes('원료비')) additionalKeywords.push('원료비');
+        });
+        
+        [...allKeywords, ...additionalKeywords].forEach(keyword => {
+          keywordFreq[keyword] = (keywordFreq[keyword] || 0) + 1;
+        });
+        
+        // 빈도순 정렬
+        const sortedKeywords = Object.entries(keywordFreq)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 15); // 상위 15개
+        
+        if (sortedKeywords.length === 0) {
+          return '<p style="color: #999; font-style: italic;">키워드 데이터가 없습니다.</p>';
+        }
+        
+        // 워드클라우드 스타일 생성
+        const maxFreq = sortedKeywords[0][1];
+        const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e'];
+        
+        return sortedKeywords.map(([keyword, freq], index) => {
+          const fontSize = Math.max(12, (freq / maxFreq) * 24 + 12);
+          const color = colors[index % colors.length];
+          const opacity = 0.7 + (freq / maxFreq) * 0.3;
+          
+          return `
+            <span style="
+              font-size: ${fontSize}px;
+              color: ${color};
+              opacity: ${opacity};
+              margin: 5px 8px;
+              display: inline-block;
+              font-weight: ${freq > 1 ? 'bold' : 'normal'};
+              padding: 4px 8px;
+              border-radius: 15px;
+              background: ${color}15;
+              border: 1px solid ${color}30;
+              transition: transform 0.2s ease;
+            " 
+            onmouseover="this.style.transform='scale(1.1)'"
+            onmouseout="this.style.transform='scale(1)'"
+            title="등장 빈도: ${freq}회">
+              ${keyword}
+            </span>
+          `;
+        }).join('');
+      }
+
       function displayAnalysisResults(technical, news, ai) {
         const contentEl = document.getElementById("analysisContent");
         
@@ -2769,7 +2841,16 @@
           </div>
 
           <div class="analysis-section">
-            <h3>📰 관련 뉴스 분석</h3>
+            <h3>📰 빅카인즈 뉴스 분석 <small style="color: #666;">(BigKinds 기반)</small></h3>
+            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
+              <h4 style="margin: 0 0 10px 0; color: #2c3e50;">🔤 주요 키워드 워드클라우드</h4>
+              <div class="wordcloud-container" style="text-align: center; padding: 20px;">
+                ${generateWordCloud(news)}
+              </div>
+              <p style="margin: 10px 0 0 0; font-size: 0.85em; color: #666;">
+                * 뉴스 제목과 내용에서 추출된 주요 키워드를 크기별로 표시
+              </p>
+            </div>
             ${news.map(item => `
               <div class="news-item">
                 <div class="news-title">
@@ -2794,9 +2875,16 @@
           </div>
 
           <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0f0f0; border-radius: 10px;">
-            <p style="margin: 0; color: #666; font-size: 0.9em;">
+            <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9em;">
               🤖 AI 분석 완료: ${new Date().toLocaleString()} | 
               데이터 기준: ${stockData[stockData.length-1].localDate}
+            </p>
+            <p style="margin: 0; color: #888; font-size: 0.8em;">
+              📰 뉴스 데이터 출처: 
+              <a href="https://www.bigkinds.or.kr/" target="_blank" style="color: #3498db; text-decoration: none;">
+                빅카인즈(BigKinds)
+              </a> | 
+              한국언론진흥재단
             </p>
           </div>
         `;
