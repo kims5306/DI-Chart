@@ -150,7 +150,13 @@ def _extract_texts_from_html(html: str) -> list:
 def _tokenize_korean(text: str) -> list:
     # 간단 토크나이저: 한글/영문/숫자 조합 토큰 추출
     tokens = re.findall(r"[가-힣A-Za-z0-9]{2,}", text)
-    return tokens
+    # 후처리: 조사 '의' 제거
+    normalized = []
+    for t in tokens:
+        if t.endswith('의') and len(t) > 2:
+            t = t[:-1]
+        normalized.append(t)
+    return normalized
 
 def _filter_stopwords(tokens: list) -> list:
     stopwords = set([
@@ -158,7 +164,9 @@ def _filter_stopwords(tokens: list) -> list:
         # 도메인 일반어
         '주가','주식','종목','시장','기업','국내','해외','대한민국','네이버','토론','게시글','댓글','분석','정보','뉴스','기사',
         # 서술/정중 표현
-        '있다','있습니다','이다','입니다','합니다','했다','합니다만','됩니다','된다','되는','되다','하였다','한다','하는데','같습니다','같아요','네요','예요','에요'
+        '있다','있습니다','없다','없습니다','없는','없음','이다','입니다','합니다','했다','합니다만','됩니다','된다','되는','되다','하였다','한다','하는데','같습니다','같아요','네요','예요','에요',
+        # 기타 잡음 토큰
+        'br','BR'
     ])
     # 흔한 서술어 어미 제거 대상 (어미로 끝나는 단어 배제)
     verb_suffixes = (
@@ -202,10 +210,11 @@ def discussion_keywords():
 
         cutoff_dt = datetime.now() - timedelta(days=30)
         texts = []
+        latest_posts = []
         max_pages = 20
         next_offset = None
 
-        for _ in range(max_pages):
+        for page_idx in range(max_pages):
             url = base_url if next_offset is None else f"{base_url}&offset={next_offset}"
             resp = requests.get(url, headers=headers, timeout=10)
             if resp.status_code != 200:
@@ -236,6 +245,17 @@ def discussion_keywords():
                 if dt is None or dt >= cutoff_dt:
                     texts.append(f"{title} {content}")
 
+            # 첫 페이지에서 최신 3개 포스트 저장
+            if page_idx == 0:
+                for p in posts[:3]:
+                    post_id = p.get('id')
+                    latest_posts.append({
+                        'title': p.get('title') or '',
+                        'content': p.get('contentSwReplaced') or '',
+                        'writtenAt': p.get('writtenAt') or '',
+                        'url': f"https://m.stock.naver.com/domestic/stock/001530/discussion/{post_id}" if post_id else 'https://m.stock.naver.com/domestic/stock/001530/discussion'
+                    })
+
             # 오래된 페이지까지 내려갔다면 중단
             if oldest_dt_in_page and oldest_dt_in_page < cutoff_dt:
                 break
@@ -245,12 +265,13 @@ def discussion_keywords():
             if not next_offset:
                 break
 
-        top_keywords = _count_top_keywords(texts, limit=10)
+        top_keywords = _count_top_keywords(texts, limit=20)
         wc = [[w, int(c)] for w, c in top_keywords if c > 0]
 
         return jsonify({
             'success': True,
-            'keywords': wc
+            'keywords': wc,
+            'latestPosts': latest_posts
         })
     except Exception as e:
         return jsonify({
