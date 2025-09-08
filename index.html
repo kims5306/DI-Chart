@@ -682,20 +682,57 @@
           });
 
           // 최근 이슈 토론 3개 표시
-          const latestWrap = document.getElementById('latestDiscussions');
-          const latest = Array.isArray(data.latestPosts) ? data.latestPosts.slice(0,3) : [];
+          const latestWrap = document.getElementById("latestDiscussions");
+          const latest = Array.isArray(data.latestPosts)
+            ? data.latestPosts.slice(0, 3)
+            : [];
           if (!latest.length) {
-            latestWrap.innerHTML = '<p style="color:#888; margin:0;">최근 글이 없습니다.</p>';
+            latestWrap.innerHTML =
+              '<p style="color:#888; margin:0;">최근 글이 없습니다.</p>';
           } else {
-            latestWrap.innerHTML = latest.map(p => `
-              <a href="${p.url || '#'}" target="_blank" style="text-decoration:none;">
-                <div style="padding:12px 10px; border-bottom:1px solid #eee;">
-                  <div style="font-weight:700; color:#2c3e50;">${p.title || '(제목 없음)'}</div>
-                  <div style="color:#555; margin-top:6px; white-space:pre-wrap;">${(p.content||'').replace(/<br\\s*\\/?>/gi,' ').slice(0,180)}${(p.content||'').length>180?'...':''}</div>
-                  <div style="color:#999; font-size:12px; margin-top:6px;">${p.writtenAt || ''}</div>
-                </div>
-              </a>
-            `).join('');
+            // 안전하게 DOM으로 생성
+            latestWrap.innerHTML = "";
+            latest.forEach(function (p) {
+              var a = document.createElement("a");
+              a.href = p.url || "#";
+              a.target = "_blank";
+              a.style.textDecoration = "none";
+
+              var box = document.createElement("div");
+              box.style.padding = "12px 10px";
+              box.style.borderBottom = "1px solid #eee";
+
+              var title = document.createElement("div");
+              title.style.fontWeight = "700";
+              title.style.color = "#2c3e50";
+              title.textContent = p.title || "(제목 없음)";
+
+              var content = document.createElement("div");
+              content.style.color = "#555";
+              content.style.marginTop = "6px";
+              content.style.whiteSpace = "pre-wrap";
+              var plain = (p.content || "").replace(
+                /<br\s*\/?>(\r\n|\n|\r)?/gi,
+                " "
+              );
+              if (plain.length > 180) {
+                content.textContent = plain.slice(0, 180) + "...";
+              } else {
+                content.textContent = plain;
+              }
+
+              var time = document.createElement("div");
+              time.style.color = "#999";
+              time.style.fontSize = "12px";
+              time.style.marginTop = "6px";
+              time.textContent = p.writtenAt || "";
+
+              box.appendChild(title);
+              box.appendChild(content);
+              box.appendChild(time);
+              a.appendChild(box);
+              latestWrap.appendChild(a);
+            });
           }
         } catch (e) {
           console.error("토론방 로딩 오류", e);
@@ -3334,7 +3371,7 @@
             </div>
 
             <div style="margin-bottom: 0; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #9b59b6;">
-              <h4 style="margin: 0 0 15px 10px; color: #2c3e50;">기존(내장) 워드클라우드</h4>
+              <h4 style="margin: 0 0 15px 10px; color: #2c3e50;">뉴스 워드클라우드</h4>
               <div class="wordcloud-container" style="text-align: center; padding: 25px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                 ${generateWordCloud()}
               </div>
