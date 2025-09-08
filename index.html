@@ -2798,14 +2798,28 @@
           // 1. 기술적 분석 수행
           const technicalAnalysis = performTechnicalAnalysis();
 
-          // 2. 키워드 분석 준비
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // 로딩 시뮬레이션
+          // 2. 토론방 키워드 수집 (상위 10개)
+          let discussionKeywords = [];
+          try {
+            const resp = await fetch(`${API_BASE}/api/discussion`);
+            const data = await resp.json();
+            if (data && data.success && Array.isArray(data.keywords)) {
+              discussionKeywords = data.keywords; // [[word, weight], ...]
+            }
+          } catch (_) {}
 
-          // 3. 종합 분석 생성 (뉴스 데이터 없이)
-          const aiAnalysis = generateAIAnalysis(technicalAnalysis);
+          // 3. 종합 분석 생성 (토론방 키워드 반영)
+          const aiAnalysis = generateAIAnalysis(
+            technicalAnalysis,
+            discussionKeywords
+          );
 
-          // 4. 결과 표시
-          displayAnalysisResults(technicalAnalysis, aiAnalysis);
+          // 4. 결과 표시 (키워드 포함)
+          displayAnalysisResults(
+            technicalAnalysis,
+            aiAnalysis,
+            discussionKeywords
+          );
 
           loadingEl.style.display = "none";
           contentEl.style.display = "block";
@@ -2959,7 +2973,7 @@
         ];
       }
 
-      function generateAIAnalysis(technical) {
+      function generateAIAnalysis(technical, discussionKeywords = []) {
         let overallSignal = "보합";
         let confidence = 0;
 
@@ -3001,7 +3015,8 @@
         const aiCommentary = generateAICommentary(
           technical,
           overallSignal,
-          confidence
+          confidence,
+          discussionKeywords
         );
 
         return {
@@ -3014,7 +3029,12 @@
         };
       }
 
-      function generateAICommentary(technical, signal, confidence) {
+      function generateAICommentary(
+        technical,
+        signal,
+        confidence,
+        discussionKeywords = []
+      ) {
         // 기술적 상황 분석
         const trendAnalysis =
           technical.trend === "강한상승"
@@ -3052,10 +3072,17 @@
           commentary += `거래량은 평균 수준을 유지하고 있습니다.\n\n`;
         }
 
-        // 3. 시장 이슈 분석
+        // 3. 시장 이슈 분석 (토론방 키워드 반영)
         commentary += `**📰 시장 이슈:** 최근 소액주주 권익 보호 및 경영권 관련 이슈가 부각되면서 주주총회와 합병 관련 논의가 활발해지고 있습니다. `;
         commentary += `이러한 거버넌스 이슈는 단기적으로 주가 변동성을 확대시킬 수 있으나, 중장기적으로는 기업 가치 제고에 긍정적 영향을 미칠 것으로 전망됩니다. `;
         commentary += `또한 2차전지 시장의 지속적 성장과 함께 알루미늄박 사업의 성장 잠재력이 주목받고 있습니다.\n\n`;
+        if (Array.isArray(discussionKeywords) && discussionKeywords.length) {
+          const joined = discussionKeywords
+            .slice(0, 10)
+            .map((k) => k[0])
+            .join(", ");
+          commentary += `최근 토론방 키워드 상위: ${joined} \n\n`;
+        }
 
         // 4. 투자 의견
         commentary += `**🎯 투자 의견:** `;
@@ -3189,7 +3216,7 @@
           .join("");
       }
 
-      function displayAnalysisResults(technical, ai) {
+      function displayAnalysisResults(technical, ai, discussionKeywords = []) {
         const contentEl = document.getElementById("analysisContent");
 
         const signalClass = ai.signal.includes("매수")
@@ -3251,14 +3278,30 @@
           <div class="analysis-section">
             <h3>🔤 DI동일 핵심 키워드 분석</h3>
             <div style="margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #3498db;">
-              <h4 style="margin: 0 0 15px 0; color: #2c3e50;">주요 키워드 워드클라우드</h4>
-              <div class="wordcloud-container" style="text-align: center; padding: 25px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                ${generateWordCloud()}
+              <h4 style="margin: 0 0 15px 10px; color: #2c3e50;">주요 키워드 (토론방 상위 10개 병합)</h4>
+              <div style="padding: 12px 10px; background: white; border-radius: 10px; display: flex; flex-wrap: wrap; gap: 8px;">
+                ${
+                  Array.isArray(discussionKeywords) && discussionKeywords.length
+                    ? discussionKeywords
+                        .slice(0, 10)
+                        .map(
+                          ([kw, cnt]) => `
+                        <span style="display:inline-block; padding:6px 10px; border-radius:14px; background:#3498db15; border:1px solid #3498db30; color:#2c3e50; font-weight:600;">
+                          ${kw}
+                          <span style="color:#888; font-weight:400;">(${cnt})</span>
+                        </span>
+                      `
+                        )
+                        .join("")
+                    : '<span style="color:#999">키워드 데이터가 없습니다.</span>'
+                }
               </div>
-              <p style="margin: 15px 0 0 0; font-size: 0.9em; color: #666; text-align: center;">
-                * DI동일 관련 최신 이슈 및 투자 키워드를 크기별로 표시
-              </p>
             </div>
+          </div>
+
+          <div class="analysis-section">
+            <h3>🧭 종합 의견 정리</h3>
+            ${buildSummaryRationale(technical, ai, discussionKeywords)}
           </div>
 
           <div class="analysis-section">
@@ -3281,6 +3324,72 @@
               </a> | 
               네이버 주식 종목 뉴스
             </p>
+          </div>
+        `;
+      }
+
+      function buildSummaryRationale(technical, ai, discussionKeywords = []) {
+        const rci9 = parseFloat(technical.rci9);
+        const macdUp = technical.macdSignal === "상승";
+        const belowMA20 = technical.currentPrice < parseFloat(technical.ma20);
+        const trend = technical.trend;
+        const volHigh = parseFloat(technical.volumeRatio) > 1.5;
+        const riskWords = new Set([
+          "리스크",
+          "하락",
+          "손실",
+          "위험",
+          "감사",
+          "소송",
+          "주총",
+          "경영권",
+          "합병",
+          "감사선임",
+          "소액주주",
+        ]);
+        const kws = new Set((discussionKeywords || []).map((k) => k[0]));
+        const hasRisk = [...riskWords].some((w) => kws.has(w));
+
+        let buyReasons = [];
+        let sellReasons = [];
+
+        if (rci9 < -80 && macdUp)
+          buyReasons.push("RCI 단기 과매도 구간(-80 이하)에서 MACD 상승 전환");
+        if (trend === "횡보" || trend === "보합")
+          buyReasons.push("횡보 구간에서 박스 하단 접근으로 위험대비보상 개선");
+        if (technical.currentPrice <= parseFloat(technical.support))
+          buyReasons.push("주요 지지선 인근(이탈 시 손절 기준 명확)");
+        if (volHigh) buyReasons.push("거래량 증가로 수급 개선 조짐");
+
+        if (!macdUp) sellReasons.push("MACD 하락 신호 지속");
+        if (rci9 > 80) sellReasons.push("RCI 과매수 구간(단기 조정 위험)");
+        if (hasRisk)
+          sellReasons.push("토론방 이슈(거버넌스/소송/감사 등) 리스크 노출");
+
+        const buyList = buyReasons.length
+          ? `<ul>${buyReasons.map((r) => `<li>${r}</li>`).join("")}</ul>`
+          : "<p>매수 근거: 특별한 유리 요인이 약함</p>";
+        const sellList = sellReasons.length
+          ? `<ul>${sellReasons.map((r) => `<li>${r}</li>`).join("")}</ul>`
+          : "<p>매도 근거: 즉각적 위험 신호는 제한적</p>";
+
+        return `
+          <p><strong>현재 의견:</strong> <span class="${
+            ai.signal.includes("매수")
+              ? "signal-buy"
+              : ai.signal.includes("매도")
+              ? "signal-sell"
+              : "signal-hold"
+          }">${ai.signal}</span> (신뢰도 ${ai.confidence}%)</p>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-top:10px;">
+            <div style="background:#e8f5e8; border:1px solid #27ae6025; border-radius:10px; padding:12px;">
+              <h4 style="margin:0 0 8px 0; color:#27ae60">매수 근거</h4>
+              ${buyList}
+            </div>
+            <div style="background:#fdf2f2; border:1px solid #e74c3c25; border-radius:10px; padding:12px;">
+              <h4 style="margin:0 0 8px 0; color:#e74c3c">매도 근거</h4>
+              ${sellList}
+            </div>
           </div>
         `;
       }

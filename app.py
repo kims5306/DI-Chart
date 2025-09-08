@@ -154,9 +154,26 @@ def _tokenize_korean(text: str) -> list:
 
 def _filter_stopwords(tokens: list) -> list:
     stopwords = set([
-        '그리고','하지만','그러나','그래서','이번','오늘','내일','이번주','지난달','지난주','관련','등등','에서','으로','하면','하는','하다','했다','되는','된다','대해','대한','까지','부터','으로써','같은','이런','저런','그런','많은','해서','해서는','아니라','아니고','이나','거나','이며','또는','혹은','대한','입니다','합니다','합니다만','하는데','때문','때문에','약간','정도','최근','지난','기준','주가','주식','종목','시장','기업','국내','해외','대한민국','네이버','토론','게시글','댓글','분석','정보','뉴스','기사'
+        '그리고','하지만','그러나','그래서','이번','오늘','내일','이번주','지난달','지난주','관련','등등','에서','으로','하면','하는','대해','대한','까지','부터','으로써','같은','이런','저런','그런','많은','해서','해서는','아니라','아니고','이나','거나','이며','또는','혹은','대한','때문','때문에','약간','정도','최근','지난','기준',
+        # 도메인 일반어
+        '주가','주식','종목','시장','기업','국내','해외','대한민국','네이버','토론','게시글','댓글','분석','정보','뉴스','기사',
+        # 서술/정중 표현
+        '있다','있습니다','이다','입니다','합니다','했다','합니다만','됩니다','된다','되는','되다','하였다','한다','하는데','같습니다','같아요','네요','예요','에요'
     ])
-    return [t for t in tokens if t not in stopwords and len(t) >= 2]
+    # 흔한 서술어 어미 제거 대상 (어미로 끝나는 단어 배제)
+    verb_suffixes = (
+        '다','니다','합니다','됩니다','해요','돼요','했어요','했음','했다','한다','되는','된다','이었다','였다','라고','라고요','겠어요','겠음'
+    )
+    filtered = []
+    for t in tokens:
+        if len(t) < 2:
+            continue
+        if t in stopwords:
+            continue
+        if any(t.endswith(suf) for suf in verb_suffixes):
+            continue
+        filtered.append(t)
+    return filtered
 
 def _count_top_keywords(texts: list, limit: int = 100) -> list:
     from collections import Counter
@@ -228,7 +245,7 @@ def discussion_keywords():
             if not next_offset:
                 break
 
-        top_keywords = _count_top_keywords(texts, limit=100)
+        top_keywords = _count_top_keywords(texts, limit=10)
         wc = [[w, int(c)] for w, c in top_keywords if c > 0]
 
         return jsonify({
