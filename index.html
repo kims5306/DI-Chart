@@ -412,6 +412,7 @@
           🌍 외국인 보유율
         </button>
         <button class="btn" onclick="showChart('all')">📋 전체 보기</button>
+        <button class="btn" onclick="showDiscussion()">💬 토론방 분석</button>
         <button
           class="btn ai-analysis-btn"
           onclick="showAIAnalysis()"
@@ -462,6 +463,16 @@
           </div>
         </div>
 
+        <!-- 토론방 분석 섹션 -->
+        <div id="discussionSection" class="chart-section" style="display: none">
+          <div class="chart-title">
+            💬 토론방 핵심 키워드 워드클라우드 (최근 1개월)
+          </div>
+          <div class="chart-wrapper" style="height: 420px">
+            <div id="wordCloud" style="width: 100%; height: 100%"></div>
+          </div>
+        </div>
+
         <!-- AI 분석 섹션 -->
         <div id="aiAnalysisSection" class="chart-section" style="display: none">
           <div class="chart-title">🤖 AI 주가 분석 리포트</div>
@@ -493,6 +504,12 @@
       // API 기본 경로 자동 감지: 파일로 직접 열었을 경우 로컬 서버로 우회
       const API_BASE =
         location.protocol === "file:" ? "http://localhost:8000" : "";
+      // 워드클라우드 라이브러리
+      const scriptWc = document.createElement("script");
+      scriptWc.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js";
+      document.head.appendChild(scriptWc);
+
       // 🎯 DI 주식 데이터 (실시간 업데이트)
       let stockData = [];
       let lastUpdateTime = null;
@@ -607,6 +624,54 @@
         createMACDChart();
         createRCIChart();
         createForeignChart();
+      }
+
+      async function showDiscussion() {
+        // 섹션 토글
+        document.getElementById("priceChart").style.display = "none";
+        document.getElementById("volumeChart").style.display = "none";
+        document.getElementById("macdChart").style.display = "none";
+        document.getElementById("rciChart").style.display = "none";
+        document.getElementById("foreignChart").style.display = "none";
+        document.getElementById("aiAnalysisSection").style.display = "none";
+        document.getElementById("discussionSection").style.display = "block";
+
+        try {
+          const resp = await fetch(`${API_BASE}/api/discussion`);
+          const data = await resp.json();
+          if (!data.success) {
+            showNotification("❌ 토론방 키워드 수집 실패", "error");
+            return;
+          }
+          // data.keywords: [[word, weight], ...]
+          const list = data.keywords.length
+            ? data.keywords
+            : [["데이터없음", 1]];
+          // wordcloud2가 로드될 때까지 대기
+          await new Promise((r) => {
+            if (window.WordCloud) return r();
+            scriptWc.onload = () => r();
+            setTimeout(() => r(), 1500);
+          });
+          const canvasContainer = document.getElementById("wordCloud");
+          window.WordCloud(canvasContainer, {
+            list,
+            gridSize: Math.round(16 * (canvasContainer.offsetWidth / 1024)),
+            weightFactor: 2,
+            origin: [
+              canvasContainer.offsetWidth / 2,
+              canvasContainer.offsetHeight / 2,
+            ],
+            backgroundColor: "#ffffff",
+            color: () => "#8e44ad",
+            rotateRatio: 0,
+            ellipticity: 0.65,
+            drawOutOfBound: false,
+          });
+        } catch (e) {
+          console.error("토론방 로딩 오류", e);
+          showNotification("❌ 토론방 로딩 중 오류", "error");
+        }
       }
 
       // 하드코딩된 데이터 (백업용)

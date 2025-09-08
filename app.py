@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import schedule
 import time
 import threading
+import re
 
 app = Flask(__name__)
 
@@ -136,6 +137,73 @@ def manual_update():
         'last_update': last_update.isoformat() if last_update else None,
         'error': err
     })
+
+def _extract_texts_from_html(html: str) -> list:
+    # 매우 단순한 텍스트 추출 (스크립트/스타일 제거 후 태그 제거)
+    html = re.sub(r"<script[\s\S]*?</script>", " ", html, flags=re.IGNORECASE)
+    html = re.sub(r"<style[\s\S]*?</style>", " ", html, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", " ", html)
+    # 공백 정리
+    text = re.sub(r"\s+", " ", text)
+    return [text]
+
+def _tokenize_korean(text: str) -> list:
+    # 간단 토크나이저: 한글/영문/숫자 조합 토큰 추출
+    tokens = re.findall(r"[가-힣A-Za-z0-9]{2,}", text)
+    return tokens
+
+def _filter_stopwords(tokens: list) -> list:
+    stopwords = set([
+        '그리고','하지만','그러나','그래서','이번','오늘','내일','이번주','지난달','지난주','관련','등등','에서','으로','하면','하는','하다','했다','되는','된다','대해','대한','까지','부터','으로써','같은','이런','저런','그런','많은','해서','해서는','아니라','아니고','이나','거나','이며','또는','혹은','대한','입니다','합니다','합니다만','하는데','때문','때문에','약간','정도','최근','지난','기준','주가','주식','종목','시장','기업','국내','해외','대한민국','네이버','토론','게시글','댓글','분석','정보','뉴스','기사'
+    ])
+    return [t for t in tokens if t not in stopwords and len(t) >= 2]
+
+def _count_top_keywords(texts: list, limit: int = 100) -> list:
+    from collections import Counter
+    tokens_all = []
+    for t in texts:
+        tokens = _filter_stopwords(_tokenize_korean(t))
+        tokens_all.extend(tokens)
+    counter = Counter(tokens_all)
+    return counter.most_common(limit)
+
+@app.route('/api/discussion')
+def discussion_keywords():
+    """지난 1개월 토론방 글을 수집하여 상위 키워드 리턴"""
+    try:
+        base_url = 'https://m.stock.naver.com/domestic/stock/001530/discussion'
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Referer': 'https://m.stock.naver.com/item/home/001530'
+        }
+
+        # 간단 페이지네이션 시도 (1~5페이지)
+        texts = []
+        for page in range(1, 6):
+            url = f"{base_url}?page={page}"
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code != 200:
+                break
+            extracted = _extract_texts_from_html(resp.text)
+            texts.extend(extracted)
+
+        # 날짜 필터링은 페이지에서 추출이 까다로워 일단 최근 페이지들 기준 수집
+        top_keywords = _count_top_keywords(texts, limit=100)
+        # 워드클라우드 라이브러리 입력 형식: [[word, weight], ...]
+        wc = [[w, int(c)] for w, c in top_keywords if c > 0]
+
+        return jsonify({
+            'success': True,
+            'keywords': wc
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'keywords': []
+        }), 500
 
 if __name__ == '__main__':
     # 초기 데이터 로드
