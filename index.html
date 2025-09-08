@@ -485,13 +485,14 @@
       </div>
 
       <div class="footer">
-        <p>
-          © 2025 DI 주식 시각화 도구 | 네이버 금융 API 기반 | Make by Bjkim
-        </p>
+        <p>© 2025 DI 주식 시각화 도구 | 네이버 금융 API 기반 | Make by Bjkim</p>
       </div>
     </div>
 
     <script>
+      // API 기본 경로 자동 감지: 파일로 직접 열었을 경우 로컬 서버로 우회
+      const API_BASE =
+        location.protocol === "file:" ? "http://localhost:8000" : "";
       // 🎯 DI 주식 데이터 (실시간 업데이트)
       let stockData = [];
       let lastUpdateTime = null;
@@ -499,7 +500,7 @@
       // 실시간 데이터 로딩 함수
       async function loadStockData() {
         try {
-          const response = await fetch("/api/stock-data");
+          const response = await fetch(`${API_BASE}/api/stock-data`);
           const result = await response.json();
 
           if (result.data && result.data.priceInfos) {
@@ -529,7 +530,7 @@
         }
 
         try {
-          const response = await fetch("/api/update");
+          const response = await fetch(`${API_BASE}/api/update`);
           const result = await response.json();
 
           if (result.success) {
@@ -3243,4 +3244,3 @@
     </script>
   </body>
 </html>
-

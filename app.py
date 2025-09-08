@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, send_from_directory
 import requests
 import json
 import os
@@ -57,7 +57,23 @@ def run_scheduler():
 @app.route('/')
 def index():
     """메인 페이지"""
-    return render_template('index.html')
+    # 현재 프로젝트 루트에 있는 index.html을 그대로 서빙
+    return send_from_directory(os.path.dirname(__file__), 'index.html')
+
+@app.route('/CI.png')
+def serve_ci_image():
+    """루트 경로에 있는 CI.png 이미지 서빙 (404 방지)"""
+    return send_from_directory(os.path.dirname(__file__), 'CI.png')
+
+@app.route('/favicon.ico')
+def serve_favicon():
+    """브라우저 기본 파비콘 요청에 대해 204로 응답하여 404 콘솔 경고 방지"""
+    return ('', 204)
+
+@app.route('/health')
+def health():
+    """Render Health Check Endpoint"""
+    return jsonify({ 'status': 'ok' })
 
 @app.route('/api/stock-data')
 def get_stock_data():
@@ -65,11 +81,30 @@ def get_stock_data():
     global stock_data, last_update
     
     if stock_data is None:
-        # 데이터가 없으면 즉시 가져오기
-        fetch_stock_data()
-    
+        # 데이터가 없으면 즉시 가져오기 시도
+        success = fetch_stock_data()
+        if not success:
+            # 프론트엔드가 기대하는 스키마를 유지하여 오류 메시지 방지
+            return jsonify({
+                'data': { 'priceInfos': [] },
+                'last_update': None
+            })
+
+    # 응답 스키마 강제 정규화
+    normalized = None
+    try:
+        if isinstance(stock_data, dict) and 'priceInfos' in stock_data:
+            normalized = { 'priceInfos': stock_data['priceInfos'] }
+        elif isinstance(stock_data, dict) and 'data' in stock_data and isinstance(stock_data['data'], dict) and 'priceInfos' in stock_data['data']:
+            normalized = { 'priceInfos': stock_data['data']['priceInfos'] }
+        else:
+            # 알 수 없는 구조일 때 비어있는 리스트로 방어
+            normalized = { 'priceInfos': [] }
+    except Exception:
+        normalized = { 'priceInfos': [] }
+
     return jsonify({
-        'data': stock_data,
+        'data': normalized,
         'last_update': last_update.isoformat() if last_update else None
     })
 
