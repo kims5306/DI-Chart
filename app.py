@@ -18,26 +18,44 @@ def fetch_stock_data():
     global stock_data, last_update
     
     try:
-        url = "https://m.stock.naver.com/api/stock/001530/daily"
+        # 네이버 신규 차트 API 엔드포인트 사용
+        url = "https://api.stock.naver.com/chart/domestic/item/001530?periodType=dayCandle"
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Referer': 'https://m.stock.naver.com/item/home/001530'
         }
         
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         
         if response.status_code == 200:
-            data = response.json()
+            try:
+                data = response.json()
+            except Exception as e:
+                print(f"JSON 파싱 오류: {e}\n본문 스니펫: {response.text[:200]}")
+                return False, {
+                    'message': 'JSON parse error',
+                    'status_code': response.status_code
+                }
             stock_data = data
             last_update = datetime.now()
             print(f"주가 데이터 업데이트 완료: {last_update}")
-            return True
+            return True, None
         else:
             print(f"API 요청 실패. 상태 코드: {response.status_code}")
-            return False
+            return False, {
+                'message': 'Bad response status',
+                'status_code': response.status_code,
+                'body': response.text[:200]
+            }
             
     except Exception as e:
         print(f"데이터 가져오기 오류: {e}")
-        return False
+        return False, {
+            'message': str(e),
+            'status_code': None
+        }
 
 def scheduled_update():
     """스케줄된 업데이트 함수"""
@@ -82,12 +100,13 @@ def get_stock_data():
     
     if stock_data is None:
         # 데이터가 없으면 즉시 가져오기 시도
-        success = fetch_stock_data()
+        success, err = fetch_stock_data()
         if not success:
             # 프론트엔드가 기대하는 스키마를 유지하여 오류 메시지 방지
             return jsonify({
                 'data': { 'priceInfos': [] },
-                'last_update': None
+                'last_update': None,
+                'error': err
             })
 
     # 응답 스키마 강제 정규화
@@ -111,10 +130,11 @@ def get_stock_data():
 @app.route('/api/update')
 def manual_update():
     """수동 업데이트 API 엔드포인트"""
-    success = fetch_stock_data()
+    success, err = fetch_stock_data()
     return jsonify({
         'success': success,
-        'last_update': last_update.isoformat() if last_update else None
+        'last_update': last_update.isoformat() if last_update else None,
+        'error': err
     })
 
 if __name__ == '__main__':
