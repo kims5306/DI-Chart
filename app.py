@@ -169,29 +169,66 @@ def _count_top_keywords(texts: list, limit: int = 100) -> list:
 
 @app.route('/api/discussion')
 def discussion_keywords():
-    """지난 1개월 토론방 글을 수집하여 상위 키워드 리턴"""
+    """지난 1개월 토론방 글을 수집하여 상위 키워드 리턴 (네이버 프론트 API 사용)"""
     try:
-        base_url = 'https://m.stock.naver.com/domestic/stock/001530/discussion'
+        base_url = (
+            'https://m.stock.naver.com/front-api/discussion/list'
+            '?discussionType=domesticStock&itemCode=001530&pageSize=20'
+            '&isHolderOnly=false&excludesItemNews=false&isItemNewsOnly=false'
+        )
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept': 'application/json, text/plain, */*',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Referer': 'https://m.stock.naver.com/item/home/001530'
+            'Referer': 'https://m.stock.naver.com/domestic/stock/001530/discussion'
         }
 
-        # 간단 페이지네이션 시도 (1~5페이지)
+        cutoff_dt = datetime.now() - timedelta(days=30)
         texts = []
-        for page in range(1, 6):
-            url = f"{base_url}?page={page}"
+        max_pages = 20
+        next_offset = None
+
+        for _ in range(max_pages):
+            url = base_url if next_offset is None else f"{base_url}&offset={next_offset}"
             resp = requests.get(url, headers=headers, timeout=10)
             if resp.status_code != 200:
                 break
-            extracted = _extract_texts_from_html(resp.text)
-            texts.extend(extracted)
+            payload = resp.json()
+            result = payload.get('result') or {}
+            posts = result.get('posts') or []
+            if not posts:
+                break
 
-        # 날짜 필터링은 페이지에서 추출이 까다로워 일단 최근 페이지들 기준 수집
+            # 텍스트/날짜 수집
+            oldest_dt_in_page = None
+            for p in posts:
+                written_at = p.get('writtenAt')  # ISO 형식
+                if written_at:
+                    try:
+                        dt = datetime.fromisoformat(written_at.replace('Z', '+00:00'))
+                    except Exception:
+                        dt = None
+                else:
+                    dt = None
+                if dt and (oldest_dt_in_page is None or dt < oldest_dt_in_page):
+                    oldest_dt_in_page = dt
+
+                # 제목 + 본문(치환 텍스트)
+                title = p.get('title') or ''
+                content = p.get('contentSwReplaced') or ''
+                if dt is None or dt >= cutoff_dt:
+                    texts.append(f"{title} {content}")
+
+            # 오래된 페이지까지 내려갔다면 중단
+            if oldest_dt_in_page and oldest_dt_in_page < cutoff_dt:
+                break
+
+            # 다음 페이지를 위한 offset은 마지막 글의 orderNo 사용
+            next_offset = posts[-1].get('orderNo')
+            if not next_offset:
+                break
+
         top_keywords = _count_top_keywords(texts, limit=100)
-        # 워드클라우드 라이브러리 입력 형식: [[word, weight], ...]
         wc = [[w, int(c)] for w, c in top_keywords if c > 0]
 
         return jsonify({
